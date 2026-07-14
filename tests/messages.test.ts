@@ -679,7 +679,7 @@ describe("bot keyboards", () => {
     );
     expect(callbackData(search)).toEqual(
       expect.arrayContaining([
-        "matches:team:1:upcoming:1",
+        "matches:team:1:running:1",
         "search:team:1",
         "search:team:3",
         "menu:settings",
@@ -709,7 +709,7 @@ describe("bot keyboards", () => {
     });
     expect(callbackData(favorites)).toEqual(
       expect.arrayContaining([
-        "matches:series:10728:upcoming:1",
+        "matches:series:10728:running:1",
         "favorites:1",
         "favorites:3",
         "menu:main",

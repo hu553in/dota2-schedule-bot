@@ -82,7 +82,7 @@ each match.
 
 ### Browse matches
 
-- **Live now** is a separate tab and always occupies its own keyboard row.
+- **Live now** opens by default and always occupies its own keyboard row.
 - **Upcoming** shows scheduled matches in chronological order.
 - **Results** shows only matches PandaScore marks as finished, newest first.
 - Every list uses the same previous and next pagination controls.
@@ -147,6 +147,17 @@ private chat so tokens and personal state cannot mix between users.
 - Wrangler authenticated with the target Cloudflare account
 - A Telegram bot created through [@BotFather](https://t.me/BotFather)
 - A local `.dev.vars` file containing the required secrets
+
+### Set the BotFather artwork
+
+Ready-to-upload artwork is available in `assets/botfather/`. In
+[@BotFather](https://t.me/BotFather), send `/mybots`, select the bot and open **Edit Bot**:
+
+- Choose **Edit Botpic** and upload [`botpic.png`](assets/botfather/botpic.png) as the 512x512
+  profile picture.
+- Choose **Edit Description Picture** and upload
+  [`description-picture.png`](assets/botfather/description-picture.png) as the 640x360 image shown
+  with the bot description to new users.
 
 ## Local setup
 
@@ -335,6 +346,7 @@ bun test:coverage  # Coverage thresholds
 ## Project structure
 
 ```text
+assets/botfather/ Ready-to-upload Telegram bot artwork
 migrations/       D1 schema migrations
 scripts/          Local development and production deployment entry points
 src/api/          PandaScore client and response schemas
