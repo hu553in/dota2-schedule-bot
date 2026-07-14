@@ -194,7 +194,7 @@ fails on any other invalid secret instead of silently replacing an existing key.
 Local D1 state is stored under `.wrangler/`. Press `Ctrl+C` to stop the bot.
 
 Long polling removes the active Telegram webhook. Use a separate BotFather bot for local
-development after a production instance is live, or run `bun deploy` afterwards to restore the
+development after a production instance is live, or run `bun run deploy` afterwards to restore the
 production webhook.
 
 ## Configuration
@@ -212,7 +212,7 @@ Runtime configuration is validated in `src/config.ts`.
 
 `PS_MASTER_KEY` must remain stable after users connect tokens. Changing it makes existing encrypted
 tokens unreadable. `WEBHOOK_SECRET` must have the same value in the deployed Worker and in the
-environment that runs `bun deploy`.
+environment that runs `bun run deploy`.
 
 Do not commit `.dev.vars`, `.env`, BotFather tokens, PandaScore tokens, or Cloudflare credentials.
 
@@ -231,16 +231,16 @@ bunx wrangler d1 create d2-schedule-bot
 ```
 
 Replace `database_id` in `wrangler.jsonc` with the returned UUID. Change the Worker `name` when
-deploying a fork under a different name. `bun deploy` synchronizes `BOT_NAME` and `BOT_USERNAME`
+deploying a fork under a different name. `bun run deploy` synchronizes `BOT_NAME` and `BOT_USERNAME`
 with the BotFather bot automatically.
 
 Run the complete deployment:
 
 ```bash
-bun deploy
+bun run deploy
 ```
 
-When `.dev.vars` exists, `bun deploy` validates it and uploads its runtime secrets with the Worker.
+When `.dev.vars` exists, `bun run deploy` validates it and uploads its runtime secrets with the Worker.
 The command also reads the current bot identity from Telegram, applies pending remote D1 migrations,
 deploys the Worker with the correct bot name and username, reads the published `workers.dev` URL,
 configures the secret-protected Telegram webhook, installs English and Russian commands, and verifies
@@ -258,10 +258,10 @@ workflow:
 2. Connect the GitHub repository.
 3. Under **API token**, select or create a user token that can deploy Workers and also has
    **Account** -> **D1** -> **Edit** for the target account. This additional permission is required
-   because `bun deploy` applies remote D1 migrations.
+   because `bun run deploy` applies remote D1 migrations.
 4. Set the production branch to `main`.
 5. Set the build command to `bun check`.
-6. Set the deploy command to `bun deploy`.
+6. Set the deploy command to `bun run deploy`.
 7. Disable non-production branch builds unless preview deployments are required.
 8. Add `BOT_TOKEN` and `WEBHOOK_SECRET` as build secrets.
 9. Add `NODE_VERSION=22.18.0` and `BUN_VERSION=1.3.14` as build variables.
