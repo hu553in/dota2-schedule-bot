@@ -376,3 +376,7 @@ wrangler.jsonc    Конфигурация Cloudflare Worker, D1, перемен
 - i18next, ky, Zod
 - Vitest с пулом Cloudflare Workers
 - Ultracite, Knip, Lefthook, commitlint
+
+## Лицензия
+
+MIT
