@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "d2-schedule-bot",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-13",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "BOT_NAME": "Dota 2 schedule bot",
+    "BOT_USERNAME": "d2_schedule_bot"
+  },
+  "secrets": {
+    "required": ["BOT_TOKEN", "PS_MASTER_KEY", "WEBHOOK_SECRET"]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "d2-schedule-bot",
+      "database_id": "01ddf667-e438-4cf1-8de0-dd5384ca3cdc",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

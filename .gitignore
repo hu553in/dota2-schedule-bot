@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+node_modules/
+.wrangler/
+coverage/
+.vscode/
+*.pem
+*.log
+.env*
+.dev.vars*
+!.dev.vars.example

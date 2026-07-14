@@ -1,0 +1,227 @@
+{
+  "buttons": {
+    "anotherSeries": "🔎 Another tournament",
+    "anotherTeam": "🔎 Another team",
+    "back": "← Back",
+    "cancel": "Cancel",
+    "checkToken": "✅ Check",
+    "connectToken": "🔐 Connect token",
+    "deleteCorruptToken": "🗑 Delete corrupted token",
+    "deleteToken": "🗑 Delete",
+    "enterToken": "🔐 Enter token",
+    "favorites": "⭐ Favorites",
+    "help": "❓ Help",
+    "language": "🌐 Language",
+    "languageEnglish": "English",
+    "languageRussian": "Русский",
+    "mainMenu": "🏠 Main menu",
+    "next": "Next →",
+    "openPrivateChat": "Open a private chat with the bot",
+    "removeFavorite": "★ Remove from favorites",
+    "replaceToken": "🔄 Replace",
+    "retry": "↻ Try again",
+    "saveFavorite": "☆ Save",
+    "searchMore": "🔎 Search again",
+    "searchSeries": "🏆 Find tournament",
+    "searchTeam": "🔎 Find team",
+    "settings": "⚙️ Settings",
+    "timezone": "🕐 Time zone",
+    "timezoneAutomatic": "↻ Use Telegram automatically",
+    "timezoneChange": "✏️ Enter UTC offset",
+    "token": "🔐 PandaScore token",
+    "tokenGuide": "📖 How to get a token",
+    "yesDeleteToken": "Yes, delete token"
+  },
+  "commands": {
+    "cleartoken": "Delete the saved PandaScore token",
+    "favorites": "Open favorites",
+    "help": "Show help",
+    "settoken": "Connect or replace the PandaScore token",
+    "start": "Open the main menu",
+    "status": "Check the PandaScore token",
+    "timezone": "Set the local time zone"
+  },
+  "deployment": {
+    "responseLanguage": "English"
+  },
+  "display": {
+    "unnamedSeries": "Unnamed tournament",
+    "unnamedTeam": "Unnamed team"
+  },
+  "errors": {
+    "favoriteLoad": "The matches loaded, but favorites are unavailable right now. Please try again.",
+    "favoriteUpdate": "Couldn't update favorites. Please try again.",
+    "favoritesOpen": "Couldn't open favorites. Please try again.",
+    "languageOpen": "Couldn't open the language setting. Please try again.",
+    "languageSave": "Couldn't save the language. Please try again.",
+    "matchesLoad": "Couldn't load matches. Please try again.",
+    "pandaScoreRateLimit": "The PandaScore hourly limit has been reached. Nothing needs fixing — try again later.",
+    "pandaScoreToken": "PandaScore rejected the token. Replace it — your favorites will stay intact.",
+    "preferencesLoad": "Saved settings are unavailable right now, so dates on this screen use Telegram's automatic localization.",
+    "search": "Search isn't available right now. Please try again.",
+    "timezoneOpen": "Couldn't open the time zone setting. Please try again.",
+    "timezoneSave": "Couldn't save the time zone. Please try again.",
+    "tokenCheck": "Couldn't check the token. Please try again.",
+    "tokenDelete": "Couldn't delete the token. Please try again.",
+    "tokenSave": "The token is valid, but couldn't be saved. Please try again.",
+    "tokenValidate": "Couldn't check the token. Your previous token, if any, was not changed. Please try again."
+  },
+  "favorites": {
+    "empty": "Nothing here yet.\n\nFind a team or tournament, open its matches and tap ☆ Save. It will then be one tap away from this screen.",
+    "list": "{{page}}. Tap a team or tournament to open its matches.",
+    "title": "⭐ Favorites"
+  },
+  "help": {
+    "body": "1. Open Settings → PandaScore token and connect your personal token.\n2. Choose team or tournament search.\n3. Reply to the bot's message with a name.\n4. For a tournament, select the whole season — for example, Esports World Cup · 2026. The bot will collect matches from all its stages.\n5. Open a team or tournament and switch between upcoming, live and results. Results contain only finished matches. Every match shows its stage; available upcoming or live broadcasts are linked.\n6. Tap ☆ to save a team or the whole tournament to favorites.\n7. If Telegram shows UTC, open Settings → Time zone and enter your offset once.",
+    "commandsTitle": "Commands",
+    "githubBefore": "The project is fully open source: the source code is on ",
+    "githubAfter": ". Take it, run your own instance and use it.",
+    "title": "How to use the bot"
+  },
+  "home": {
+    "readyBody": "Find a team or tournament to see upcoming matches and recent results.\n\nA tournament includes matches from all of its stages; each match shows its exact stage.\n\n⭐ Save anything you follow to favorites and open it again in one tap.\n\nWhere should we start?",
+    "setupBody": "The bot shows schedules and results for teams and tournaments and saves the ones you follow to favorites.\n\nIt needs a free personal PandaScore token. Getting one takes a couple of minutes — start with the button below.",
+    "title": "Dota 2 schedule"
+  },
+  "input": {
+    "invalidKind": "Please reply with text.",
+    "placeholder": {
+      "series": "Enter a name",
+      "team": "Enter a name",
+      "timezone": "For example: +6",
+      "token": "Paste the token"
+    },
+    "prompt": {
+      "series": "🏆 Tournament search\n\nReply to this message with a name. For example: Esports World Cup 2026, The International or ESL One.",
+      "team": "🔎 Team search\n\nReply to this message with a name. For example: Team Spirit, OG or Liquid.",
+      "timezone": "🕐 Time zone\n\nTelegram does not share your time zone with bots. Reply with your UTC offset — for example, +6, -3 or +5:30. To let Telegram localize dates again, send ‘auto’.",
+      "token": "🔐 Connect PandaScore\n\nReply to this message with your token. The bot will immediately try to delete the secret message, validate the token and store it encrypted."
+    }
+  },
+  "language": {
+    "automatic": "Using the device language",
+    "current": "Current: {{value}} · {{source}}",
+    "descriptionAutomatic": "The language was selected from your Telegram device settings. Choose one below to save it explicitly.",
+    "descriptionManual": "This language is saved for your account and is used for all bot screens, deployment instructions and dates formatted with a manual UTC offset. In automatic time zone mode, Telegram uses your device language for dates.",
+    "manual": "Selected manually",
+    "title": "Language"
+  },
+  "match": {
+    "emptyFiltered": "There are no matches with known participants on this page. Continue to the next page.",
+    "format": {
+      "custom": "Custom format",
+      "gameCount_few": "{{count}} games",
+      "gameCount_many": "{{count}} games",
+      "gameCount_one": "{{count}} game",
+      "gameCount_other": "{{count}} games"
+    },
+    "participantUnknown": "Participant TBD",
+    "stage": "Stage: {{name}}",
+    "status": {
+      "canceled": "Canceled",
+      "draw": "Draw",
+      "postponed": "Postponed",
+      "unknown": "Status unknown"
+    },
+    "stream": {
+      "main": "main",
+      "official": "official",
+      "unofficial": "unofficial"
+    },
+    "timeUnknown": "Time TBD",
+    "tournament": "Tournament: {{name}}",
+    "direction": {
+      "past": {
+        "empty": "There are no completed matches yet. Check again later or open upcoming matches.",
+        "heading": "Recent results"
+      },
+      "running": {
+        "empty": "No matches are live right now. Check upcoming matches or results.",
+        "heading": "Live now"
+      },
+      "upcoming": {
+        "empty": "There are no scheduled matches yet. Check again later or open results.",
+        "heading": "Upcoming matches"
+      }
+    },
+    "tabs": {
+      "past": "✅ Results",
+      "running": "🔴 Live now",
+      "upcoming": "📅 Upcoming"
+    }
+  },
+  "pagination": {
+    "page": "Page {{page}}",
+    "pageOf": "Page {{page}} of {{totalPages}}"
+  },
+  "privateChat": {
+    "callback": "Open a private chat with the bot — the token and favorites are personal.",
+    "command": "This bot works in a private chat so your token and favorites never mix with other people's actions."
+  },
+  "search": {
+    "empty": "Nothing found.\n\nCheck the spelling or immediately reply with another, shorter {{subject}} name.",
+    "emptyPage": "There is nothing on this page",
+    "foundSeries": "Tournament search results",
+    "foundTeam": "Team search results",
+    "instructionEmpty": "Go back or start a new search.",
+    "instructionFound": "Tap the result you need.",
+    "length": "The name must be between {{min}} and {{max}} characters.",
+    "subjectSeries": "tournament",
+    "subjectTeam": "team",
+    "unknownCommand": "I don't know that command. Open the main menu or use /help.",
+    "unexpectedText": "I expect a name only after a search button. Choose what you want to find."
+  },
+  "settings": {
+    "body": "Set your language, local time and PandaScore connection here.",
+    "title": "⚙️ Settings"
+  },
+  "timezone": {
+    "automatic": "Automatic via Telegram",
+    "automaticDescription": "Telegram should show dates in the device time zone. If you see UTC instead, enter your UTC offset manually.",
+    "invalid": "Couldn't parse the offset. Send, for example, +6, -3, +5:30 or ‘auto’.",
+    "manual": "{{offset}} · entered manually",
+    "manualDescription": "This offset is applied to every match time regardless of the Telegram client version.",
+    "now": "Current: {{value}}",
+    "title": "Time zone"
+  },
+  "token": {
+    "deleteConfirm": "Delete the saved PandaScore token? Your favorites will stay intact.",
+    "groupDeleted": "The message containing the token was deleted. Connect tokens only in a private chat with the bot.",
+    "groupNotDeleted": "⚠️ I couldn't delete the message containing the token. Delete it manually, rotate the token in PandaScore and connect the new one only in a private chat.",
+    "invalidCandidate": "The token looks incomplete. Copy the entire value from ‘Your access token’ and try again.",
+    "notDeleted": "⚠️ I couldn't delete the message containing the token, so I did not save it. Delete the message manually, rotate the token in PandaScore and try again.",
+    "savedBody": "The message containing the token was deleted and the token itself was stored encrypted.\n\nNow choose a team, tournament or open favorites.",
+    "savedTitle": "Done — token connected",
+    "screenTitle": "PandaScore token",
+    "state": {
+      "connected": "✅ The token is connected and stored encrypted. You can check or replace it.",
+      "corrupt": "⚠️ The saved token is corrupted or cannot be decrypted. Delete it and connect it again.",
+      "invalid": "❌ PandaScore rejected the saved token. Replace it — your favorites will stay intact.",
+      "missing": "No token is connected yet. Open the short guide or send a token you already have.",
+      "unavailable": "⚠️ The saved token could not be read right now. Try again — you do not need to re-enter anything yet.",
+      "valid": "✅ PandaScore accepted the token. Everything works — you can search for matches."
+    },
+    "guide": {
+      "afterDashboard": ".\n\n3. Copy the value from ",
+      "afterField": ".\n\n4. Return here, tap ‘Enter token’ and send it as a reply to the bot's message.\n\nThe free plan includes the Dota 2 schedules and results the bot needs and allows 1,000 HTTP requests per hour. One screen usually takes 1–2 requests, so a single person has an enormous margin.\n\nThe token is stored encrypted. If you would still rather not trust someone else's bot instance, deploy the project from ",
+      "afterGithub": " in your own ",
+      "afterCloudflare": " account and use your own D1 database. That keeps the token and data under your control.\n\nNeed step-by-step deployment help? Open ",
+      "afterChatGpt": " or ",
+      "afterClaude": ". A detailed prompt will already be in the input field; review and send it.",
+      "beforeDashboard": "Open ",
+      "dashboard": "PandaScore Dashboard",
+      "field": "Your access token",
+      "signup": "Create a PandaScore account",
+      "title": "How to get a free PandaScore token"
+    }
+  },
+  "toasts": {
+    "alreadyOpen": "This section is already open.",
+    "favoriteAdded": "Added to favorites",
+    "favoriteRemoved": "Removed from favorites",
+    "staleButton": "This button is outdated. Open the main menu and try again.",
+    "staleFavorite": "Couldn't identify the selected item. Open it again.",
+    "staleFavorites": "This button is outdated. Open favorites again.",
+    "staleSearch": "This button is outdated. Start a new search."
+  }
+}
