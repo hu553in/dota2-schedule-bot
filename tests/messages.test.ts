@@ -593,7 +593,7 @@ describe("bot messages", () => {
         total: 0,
         totalPages: 1,
       }).text
-    ).toContain("☆ Сохранить");
+    ).toContain("☆ Добавить в избранное");
     expect(
       favoritesMessage(en, {
         data: [],
@@ -750,17 +750,28 @@ describe("bot keyboards", () => {
     );
     expect(callbackData(keyboard)).not.toContain("menu:settings");
     expect(
-      callbackData(
-        matchesKeyboard(en, {
-          direction: "running",
-          hasNext: false,
-          id: 8,
-          isFavorite: true,
-          page: 1,
-          type: "series",
-        })
-      )
-    ).toContain("favorite:set:series:8:running:1:0:0");
+      keyboardRows(keyboard)
+        .flat()
+        .find((button) => button.callback_data?.startsWith("favorite:set:"))
+        ?.style
+    ).toBe("primary");
+    const favoriteKeyboard = matchesKeyboard(en, {
+      direction: "running",
+      hasNext: false,
+      id: 8,
+      isFavorite: true,
+      page: 1,
+      type: "series",
+    });
+    expect(callbackData(favoriteKeyboard)).toContain(
+      "favorite:set:series:8:running:1:0:0"
+    );
+    expect(
+      keyboardRows(favoriteKeyboard)
+        .flat()
+        .find((button) => button.callback_data?.startsWith("favorite:set:"))
+        ?.style
+    ).toBeUndefined();
     expect(
       callbackData(
         matchesKeyboard(en, {
