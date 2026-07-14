@@ -7,6 +7,7 @@ import { truncateText } from "../text.ts";
 import type { TokenScreenState } from "./messages.ts";
 
 const BUTTON_TEXT_LIMIT = 52;
+const DEFAULT_MATCH_DIRECTION: MatchDirection = "running";
 
 export interface MatchNavigation {
   direction: MatchDirection;
@@ -221,7 +222,7 @@ export function searchResultsKeyboard(
     keyboard
       .text(
         truncateText(result.name, BUTTON_TEXT_LIMIT),
-        matchesCallback(type, result.id, "upcoming", 1)
+        matchesCallback(type, result.id, DEFAULT_MATCH_DIRECTION, 1)
       )
       .row();
   }
@@ -296,7 +297,7 @@ export function favoritesKeyboard(
     keyboard
       .text(
         truncateText(`${icon} ${favorite.name}`, BUTTON_TEXT_LIMIT),
-        matchesCallback(favorite.type, favorite.id, "upcoming", 1)
+        matchesCallback(favorite.type, favorite.id, DEFAULT_MATCH_DIRECTION, 1)
       )
       .primary()
       .row();

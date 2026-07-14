@@ -497,7 +497,7 @@ describe("createBot", () => {
     );
     expect(
       encoded(telegram.required("sendMessage").payload.reply_markup)
-    ).toContain("matches:team:7:upcoming:1");
+    ).toContain("matches:team:7:running:1");
 
     await bot.handleUpdate(
       textUpdate("Esports World Cup 2026", {
@@ -854,7 +854,7 @@ describe("createBot", () => {
     const message = telegram.required("sendMessage").payload;
     expect(message.text).toContain("Страница 1 из 2");
     expect(encoded(message.reply_markup)).toContain(
-      "matches:series:10728:upcoming:1"
+      "matches:series:10728:running:1"
     );
   });
 
