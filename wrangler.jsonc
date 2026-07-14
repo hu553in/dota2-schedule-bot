@@ -19,7 +19,7 @@
     {
       "binding": "DB",
       "database_name": "d2-schedule-bot",
-      "database_id": "01ddf667-e438-4cf1-8de0-dd5384ca3cdc",
+      "database_id": "a350f693-71c2-4765-b0a7-889f6e962fc0",
       "migrations_dir": "migrations"
     }
   ]
