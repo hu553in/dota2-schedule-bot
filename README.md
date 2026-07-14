@@ -366,3 +366,7 @@ wrangler.jsonc    Cloudflare Worker, D1, variables, and observability configurat
 - i18next, ky, Zod
 - Vitest with the Cloudflare Workers pool
 - Ultracite, Knip, Lefthook, commitlint
+
+## License
+
+MIT
