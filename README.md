@@ -93,9 +93,9 @@ each match.
 
 ### Use favorites
 
-Open a team or tournament season and tap **☆ Save**. Saved entities appear under **Favorites** and
-open their matches in one tap. Tap **★ Remove from favorites** on the same match screen to remove
-one.
+Open a team or tournament season and tap **☆ Add to favorites**. Saved entities appear under
+**Favorites** and open their matches in one tap. Tap **★ Remove from favorites** on the same match
+screen to remove one.
 
 Favorites are stored separately from the PandaScore token. They remain available after the token is
 replaced or deleted, but match loading still requires a valid token.

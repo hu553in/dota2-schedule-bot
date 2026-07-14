@@ -261,16 +261,16 @@ export function matchesKeyboard(
   );
 
   if (selection.isFavorite !== null) {
-    keyboard
-      .text(
-        t(
-          selection.isFavorite
-            ? "buttons.removeFavorite"
-            : "buttons.saveFavorite"
-        ),
-        `favorite:set:${selection.type}:${selection.id}:${selection.direction}:${selection.page}:${selection.hasNext ? 1 : 0}:${selection.isFavorite ? 0 : 1}`
-      )
-      .row();
+    keyboard.text(
+      t(
+        selection.isFavorite ? "buttons.removeFavorite" : "buttons.saveFavorite"
+      ),
+      `favorite:set:${selection.type}:${selection.id}:${selection.direction}:${selection.page}:${selection.hasNext ? 1 : 0}:${selection.isFavorite ? 0 : 1}`
+    );
+    if (!selection.isFavorite) {
+      keyboard.primary();
+    }
+    keyboard.row();
   }
   keyboard
     .text(

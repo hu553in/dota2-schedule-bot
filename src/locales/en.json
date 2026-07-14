@@ -20,7 +20,7 @@
     "removeFavorite": "★ Remove from favorites",
     "replaceToken": "🔄 Replace",
     "retry": "↻ Try again",
-    "saveFavorite": "☆ Save",
+    "saveFavorite": "☆ Add to favorites",
     "searchMore": "🔎 Search again",
     "searchSeries": "🏆 Find tournament",
     "searchTeam": "🔎 Find team",
@@ -67,7 +67,7 @@
     "tokenValidate": "Couldn't check the token. Your previous token, if any, was not changed. Please try again."
   },
   "favorites": {
-    "empty": "Nothing here yet.\n\nFind a team or tournament, open its matches and tap ☆ Save. It will then be one tap away from this screen.",
+    "empty": "Nothing here yet.\n\nFind a team or tournament, open its matches and tap ☆ Add to favorites. It will then be one tap away from this screen.",
     "list": "{{page}}. Tap a team or tournament to open its matches.",
     "title": "⭐ Favorites"
   },
