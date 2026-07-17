@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
+
 import {
-  type DeploymentVariables,
   selectDeploymentSecrets,
   workerDeployArguments,
   workerUrlFromDeployOutput,
 } from "../scripts/deployment.ts";
+import type { DeploymentVariables } from "../scripts/deployment.ts";
 
 const VALID_VARIABLES = {
   BOT_TOKEN: "123456789:local_bot_token_123456789012345",
@@ -15,17 +16,37 @@ const VALID_VARIABLES = {
 describe("deployment", () => {
   it("extracts and normalizes the deployed workers.dev URL", () => {
     expect(
-      workerUrlFromDeployOutput(`
-        Uploaded d2-schedule-bot
-        https://d2-schedule-bot.example.workers.dev/
-        Current Version ID: version-id
-      `)
+      workerUrlFromDeployOutput(
+        [
+          JSON.stringify({ message: "Uploaded d2-schedule-bot", type: "log" }),
+          JSON.stringify({
+            targets: [
+              "schedule: 0 * * * *",
+              "https://d2-schedule-bot.example.workers.dev/",
+            ],
+            type: "deploy",
+            version: 1,
+          }),
+        ].join("\n")
+      )
     ).toBe("https://d2-schedule-bot.example.workers.dev");
   });
 
   it("fails when Wrangler does not report a workers.dev URL", () => {
-    expect(() => workerUrlFromDeployOutput("Worker deployed.")).toThrow(
-      "Wrangler did not report a workers.dev deployment URL"
+    expect(() =>
+      workerUrlFromDeployOutput(
+        JSON.stringify({
+          targets: ["https://example.com"],
+          type: "deploy",
+          version: 1,
+        })
+      )
+    ).toThrow("Wrangler did not report a workers.dev deployment URL");
+  });
+
+  it("fails when Wrangler writes malformed deployment output", () => {
+    expect(() => workerUrlFromDeployOutput("not-json")).toThrow(
+      "Wrangler wrote invalid deployment output"
     );
   });
 
@@ -35,12 +56,14 @@ describe("deployment", () => {
       PS_MASTER_KEY: undefined,
       WEBHOOK_SECRET: "environment_webhook_secret_123456789",
     } satisfies DeploymentVariables;
-    expect(selectDeploymentSecrets(VALID_VARIABLES, environment)).toEqual({
-      botToken: VALID_VARIABLES.BOT_TOKEN,
-      useLocalSecrets: true,
-      webhookSecret: VALID_VARIABLES.WEBHOOK_SECRET,
-    });
-    expect(selectDeploymentSecrets(null, environment)).toEqual({
+    expect(selectDeploymentSecrets(VALID_VARIABLES, environment)).toStrictEqual(
+      {
+        botToken: VALID_VARIABLES.BOT_TOKEN,
+        useLocalSecrets: true,
+        webhookSecret: VALID_VARIABLES.WEBHOOK_SECRET,
+      }
+    );
+    expect(selectDeploymentSecrets(null, environment)).toStrictEqual({
       botToken: environment.BOT_TOKEN,
       useLocalSecrets: false,
       webhookSecret: environment.WEBHOOK_SECRET,
@@ -59,14 +82,14 @@ describe("deployment", () => {
 
   it("builds a secret-free Wrangler argument list", () => {
     const bot = { first_name: "Dota Bot", username: "dota_bot" };
-    expect(workerDeployArguments(bot, null)).toEqual([
+    expect(workerDeployArguments(bot, null)).toStrictEqual([
       "deploy",
       "--var",
       "BOT_NAME:Dota Bot",
       "--var",
       "BOT_USERNAME:dota_bot",
     ]);
-    expect(workerDeployArguments(bot, ".dev.vars")).toEqual([
+    expect(workerDeployArguments(bot, ".dev.vars")).toStrictEqual([
       ...workerDeployArguments(bot, null),
       "--secrets-file",
       ".dev.vars",

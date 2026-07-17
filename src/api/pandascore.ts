@@ -1,14 +1,10 @@
-import ky, { isHTTPError, type KyInstance } from "ky";
+import ky, { isHTTPError } from "ky";
+import type { KyInstance } from "ky";
 import { z } from "zod";
+
 import type { Page } from "../pagination.ts";
-import {
-  type Match,
-  matchSchema,
-  type Series,
-  seriesSchema,
-  type Team,
-  teamSchema,
-} from "./schemas.ts";
+import { matchSchema, seriesSchema, teamSchema } from "./schemas.ts";
+import type { Match, Series, Team } from "./schemas.ts";
 
 const API_URL = "https://api.pandascore.co/";
 const MAX_PAGE_SIZE = 100;
@@ -57,8 +53,8 @@ function slugSearchTerm(value: string): string {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replaceAll(/[^a-z0-9]+/gu, "-")
+    .replaceAll(/^-+|-+$/gu, "");
 }
 
 function addNestedParams(

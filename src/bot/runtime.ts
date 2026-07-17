@@ -1,5 +1,7 @@
 import type { FormattedString } from "@grammyjs/parse-mode";
-import { GrammyError, type InlineKeyboard } from "grammy";
+import { GrammyError } from "grammy";
+import type { InlineKeyboard } from "grammy";
+
 import { errorMessage } from "../error-message.ts";
 import type { Translate } from "../localization.ts";
 import { TokenIntegrityError } from "../storage/token-store.ts";
@@ -11,11 +13,8 @@ import {
   privateChatKeyboard,
   tokenKeyboard,
 } from "./keyboards.ts";
-import {
-  homeMessage,
-  type TokenScreenState,
-  tokenScreenMessage,
-} from "./messages.ts";
+import { homeMessage, tokenScreenMessage } from "./messages.ts";
+import type { TokenScreenState } from "./messages.ts";
 
 export type ScreenMode = "edit" | "reply";
 
@@ -108,7 +107,9 @@ export async function editKeyboard(
 export function acknowledge(context: BotContext): Promise<void> {
   return context
     .answerCallbackQuery()
-    .then(() => undefined)
+    .then(() => {
+      /* empty */
+    })
     .catch((error) => {
       console.error("Callback acknowledgement failed", {
         message: errorMessage(error),
@@ -152,8 +153,11 @@ export async function showTokenScreen(
   mode: ScreenMode,
   knownState?: TokenScreenState
 ): Promise<void> {
-  const state =
-    knownState ?? (await readStoredToken(context, tokenStore)).state;
+  let state = knownState;
+  if (state === undefined) {
+    const { state: storedState } = await readStoredToken(context, tokenStore);
+    state = storedState;
+  }
   await showScreen(
     context,
     tokenScreenMessage(context.t, state),

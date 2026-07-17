@@ -1,5 +1,7 @@
-import { BotError, type Context, GrammyError, HttpError } from "grammy";
+import { BotError, GrammyError, HttpError } from "grammy";
+import type { Context } from "grammy";
 import { describe, expect, it, vi } from "vitest";
+
 import { PandaScoreApi } from "../src/api/pandascore.ts";
 import type { BotContext } from "../src/bot/context.ts";
 import { logWebhookError, replyApiError } from "../src/bot/errors.ts";
@@ -18,7 +20,7 @@ function botContext(reply: ReturnType<typeof vi.fn>): BotContext {
 async function httpError(status: number): Promise<unknown> {
   const api = new PandaScoreApi({
     baseUrl: "https://pandascore.test/",
-    fetch: async () => Response.json({}, { status }),
+    fetch: () => Promise.resolve(Response.json({}, { status })),
   });
   try {
     await api.getTeam(1, "token");
@@ -28,9 +30,9 @@ async function httpError(status: number): Promise<unknown> {
   throw new Error("Expected PandaScore request to fail");
 }
 
-describe("replyApiError", () => {
+describe(replyApiError, () => {
   it.each([401, 403])("explains rejected tokens (%s)", async (status) => {
-    const reply = vi.fn().mockResolvedValue(undefined);
+    const reply = vi.fn(() => Promise.resolve());
     await replyApiError(botContext(reply), await httpError(status), "fallback");
     expect(reply).toHaveBeenCalledWith(
       expect.stringContaining("Замени"),
@@ -39,7 +41,7 @@ describe("replyApiError", () => {
   });
 
   it("explains PandaScore rate limits", async () => {
-    const reply = vi.fn().mockResolvedValue(undefined);
+    const reply = vi.fn(() => Promise.resolve());
     await replyApiError(botContext(reply), await httpError(429), "fallback");
     expect(reply).toHaveBeenCalledWith(
       expect.stringContaining("Лимит"),
@@ -48,10 +50,8 @@ describe("replyApiError", () => {
   });
 
   it("logs sanitized HTTP failures and uses the fallback", async () => {
-    const reply = vi.fn().mockResolvedValue(undefined);
-    const error = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
+    const reply = vi.fn(() => Promise.resolve());
+    const error = vi.spyOn(console, "error").mockReturnValue();
     await replyApiError(botContext(reply), await httpError(500), "fallback");
     expect(error).toHaveBeenCalledWith(
       "PandaScore request failed",
@@ -64,10 +64,8 @@ describe("replyApiError", () => {
   });
 
   it("logs non-HTTP failures and uses the fallback", async () => {
-    const reply = vi.fn().mockResolvedValue(undefined);
-    const error = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
+    const reply = vi.fn(() => Promise.resolve());
+    const error = vi.spyOn(console, "error").mockReturnValue();
     await replyApiError(
       botContext(reply),
       new Error("invalid payload"),
@@ -84,7 +82,7 @@ describe("replyApiError", () => {
   });
 });
 
-describe("logWebhookError", () => {
+describe(logWebhookError, () => {
   const context = {
     chat: { id: 1 },
     from: { id: 2 },
@@ -92,7 +90,7 @@ describe("logWebhookError", () => {
   } as unknown as Context;
 
   it("logs errors outside grammY without dumping request objects", () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     logWebhookError(new Error("startup failed"));
     logWebhookError("unknown failure");
     expect(log).toHaveBeenCalledWith("Webhook failed", {
@@ -104,7 +102,7 @@ describe("logWebhookError", () => {
   });
 
   it("logs sanitized Telegram API errors", () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     const telegramError = new GrammyError(
       "bad request",
       {
@@ -123,7 +121,7 @@ describe("logWebhookError", () => {
   });
 
   it("logs sanitized Telegram connection errors", () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     logWebhookError(
       new BotError(
         new HttpError("offline", new Error("socket closed")),
@@ -142,7 +140,7 @@ describe("logWebhookError", () => {
   });
 
   it("logs sanitized middleware errors", () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     logWebhookError(new BotError(new Error("database down"), context));
     logWebhookError(new BotError("unknown", context));
     expect(log).toHaveBeenCalledWith(

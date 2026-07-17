@@ -3,12 +3,17 @@ import { z } from "zod";
 
 export type WorkerEnv = Cloudflare.Env;
 
+function botIdFromToken(token: string): number {
+  const [id] = token.split(":", 1);
+  return Number(id);
+}
+
 export const botTokenSchema = z
   .string()
   .min(20)
-  .regex(/^\d+:[A-Za-z0-9_-]+$/, "BOT_TOKEN is not a Telegram bot token")
+  .regex(/^\d+:[A-Za-z0-9_-]+$/u, "BOT_TOKEN is not a Telegram bot token")
   .refine((value) => {
-    const id = Number.parseInt(value, 10);
+    const id = botIdFromToken(value);
     return id > 0 && Number.isSafeInteger(id);
   }, "BOT_TOKEN contains an invalid Telegram bot id");
 
@@ -33,9 +38,16 @@ export const webhookSecretSchema = z
   .min(32)
   .max(256)
   .regex(
-    /^[A-Za-z0-9_-]+$/,
+    /^[A-Za-z0-9_-]+$/u,
     "WEBHOOK_SECRET may contain only A-Z, a-z, 0-9, _ and -"
   );
+
+const telegramPremiumSchema = z
+  .enum(["false", "true"], {
+    error: "TELEGRAM_PREMIUM must be true or false",
+  })
+  .default("false")
+  .transform((value) => value === "true");
 
 const configSchema = z.object({
   BOT_NAME: z.string().min(1),
@@ -43,8 +55,9 @@ const configSchema = z.object({
   BOT_USERNAME: z
     .string()
     .min(1)
-    .regex(/^[A-Za-z0-9_]+$/),
+    .regex(/^[A-Za-z0-9_]+$/u),
   PS_MASTER_KEY: masterKeySchema,
+  TELEGRAM_PREMIUM: telegramPremiumSchema,
   WEBHOOK_SECRET: webhookSecretSchema,
 });
 
@@ -52,10 +65,11 @@ export interface AppConfig {
   botInfo: UserFromGetMe;
   botToken: string;
   masterKey: Uint8Array;
+  telegramPremium: boolean;
   webhookSecret: string;
 }
 
-export function parseConfig(environment: WorkerEnv): AppConfig {
+export function parseConfig(environment: unknown): AppConfig {
   const config = configSchema.parse(environment);
   return {
     botInfo: {
@@ -67,7 +81,7 @@ export function parseConfig(environment: WorkerEnv): AppConfig {
       first_name: config.BOT_NAME,
       has_main_web_app: false,
       has_topics_enabled: false,
-      id: Number.parseInt(config.BOT_TOKEN, 10),
+      id: botIdFromToken(config.BOT_TOKEN),
       is_bot: true,
       supports_inline_queries: false,
       supports_join_request_queries: false,
@@ -75,6 +89,7 @@ export function parseConfig(environment: WorkerEnv): AppConfig {
     },
     botToken: config.BOT_TOKEN,
     masterKey: config.PS_MASTER_KEY,
+    telegramPremium: config.TELEGRAM_PREMIUM,
     webhookSecret: config.WEBHOOK_SECRET,
   };
 }

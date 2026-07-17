@@ -7,13 +7,15 @@
 Telegram bot for Dota 2 schedules, live matches, results, tournament seasons, and favorites. Match
 data comes from PandaScore. The production runtime uses Cloudflare Workers and D1.
 
-Open [@d2_schedule_bot](https://t.me/d2_schedule_bot) to use the hosted instance.
+Open [@d2_schedule_bot](https://t.me/d2_schedule_bot) to use the hosted instance. To keep the bot
+and its data in your own accounts, follow the [step-by-step self-hosting guide](#self-hosting).
 
 ## What it does
 
 - Searches PandaScore Dota 2 teams and tournament seasons
 - Shows upcoming, live, and completed matches with pagination
-- Links available broadcasts on upcoming and live matches
+- Links available broadcasts on upcoming and live matches, with optional Telegram Premium provider
+  icons for self-hosted bots
 - Groups every stage under its complete tournament season
 - Shows the tournament and exact stage for team matches
 - Hides matches where both participants are still unknown
@@ -77,8 +79,8 @@ button is required.
 
 PandaScore exposes individual stages as tournaments inside a series. The bot deliberately presents
 the series as one user-facing tournament season. Favorites therefore save the complete season, not
-one playoff, qualifier, group, or survival stage. The exact PandaScore stage remains visible on
-each match.
+one playoff, qualifier, group, or survival stage. The exact PandaScore stage remains visible on each
+match.
 
 ### Browse matches
 
@@ -91,6 +93,11 @@ each match.
 - Live and completed scores use digit emoji; an unavailable score is shown as `❔`.
 - Draws, postponed matches, and unrecognized statuses are labeled explicitly.
 
+Broadcasts are comma-separated links. English and Russian broadcast languages are shown as `🇺🇸` and
+`🇷🇺`; other language codes remain visible as text. In the default mode, the complete label and its
+details — for example, `Twitch (🇷🇺 main)` — open the stream. A self-hosted bot can replace a known
+provider name with a custom emoji; the complete parenthesized details remain linked.
+
 ### Use favorites
 
 Open a team or tournament season and tap **☆ Add to favorites**. Saved entities appear under
@@ -102,12 +109,12 @@ replaced or deleted, but match loading still requires a valid token.
 
 ### Change language
 
-Open **Settings** -> **Language** and select **English** or **Russian**.
+Open **Settings** -> **Language** and select **🇺🇸 English** or **🇷🇺 Русский**.
 
-Before a language is selected manually, the bot uses the Telegram device language when it is
-Russian and falls back to English for every other language. The saved language applies to all bot
-screens, deployment help, and dates formatted with a manual UTC offset. In automatic time zone
-mode, Telegram controls the date language as well as the time zone.
+Before a language is selected manually, the bot uses the Telegram device language when it is Russian
+and falls back to English for every other language. The saved language applies to all bot screens,
+deployment help, and dates formatted with a manual UTC offset. In automatic time zone mode, Telegram
+controls the date language as well as the time zone.
 
 ### Set the time zone
 
@@ -139,147 +146,163 @@ from `-12:00` through `+14:00`.
 The bot is designed for private chats. Commands and callbacks used in a group direct the user to a
 private chat so tokens and personal state cannot mix between users.
 
-## Self-hosting requirements
+## Self-hosting
 
-- Bun 1.3.14
-- Node.js 22.18 or newer
-- A Cloudflare account with Workers and D1 access
-- Wrangler authenticated with the target Cloudflare account
-- A Telegram bot created through [@BotFather](https://t.me/BotFather)
-- A local `.dev.vars` file containing the required secrets
+This guide takes you from an empty Cloudflare account to a working private bot. No Telegram bot or
+Cloudflare development experience is required. Run the commands below one block at a time in a
+terminal; if a command opens a browser, complete the requested sign-in there and return to the
+terminal.
 
-### Set the BotFather artwork
+### 1. Install the required tools
 
-Ready-to-upload artwork is available in `assets/botfather/`. In
-[@BotFather](https://t.me/BotFather), send `/mybots`, select the bot and open **Edit Bot**:
+You need:
 
-- Choose **Edit Botpic** and upload [`botpic.png`](assets/botfather/botpic.png) as the 512x512
-  profile picture.
-- Choose **Edit Description Picture** and upload
-  [`description-picture.png`](assets/botfather/description-picture.png) as the 640x360 image shown
-  with the bot description to new users.
+- [Git](https://git-scm.com/downloads)
+- [Node.js](https://nodejs.org/en/download) 22.18 or newer
+- [Bun](https://bun.sh/docs/installation) 1.3.14
+- A free [Cloudflare account](https://dash.cloudflare.com/sign-up)
+- A Telegram account
 
-## Local setup
-
-Install dependencies and create the local configuration:
+After installing the tools, close and reopen the terminal. These commands should print their
+versions instead of an error:
 
 ```bash
+git --version
+node --version
+bun --version
+```
+
+On Windows, use WSL or Git Bash for the commands in this guide.
+
+### 2. Create a Telegram bot
+
+1. Open [@BotFather](https://t.me/BotFather) in Telegram and send `/newbot`.
+2. Choose the display name shown to users.
+3. Choose a username ending in `bot`, for example `my_dota_schedule_bot`.
+4. Copy the bot token returned by BotFather. Treat it like a password and never publish it.
+
+The token looks similar to `123456789:AA...`. You will add it to a local configuration file in the
+next step.
+
+### 3. Download and configure the project
+
+Download the repository, enter its directory, install the exact dependencies from the lockfile, and
+create a private local configuration:
+
+```bash
+git clone https://github.com/hu553in/dota2-schedule-bot.git
+cd dota2-schedule-bot
 bun ci
 cp .dev.vars.example .dev.vars
 ```
 
-Set `BOT_TOKEN` to the token from BotFather. Generate the two local cryptographic secrets:
-
-```bash
-openssl rand -base64 32
-openssl rand -hex 32
-```
-
-Use the base64 value as `PS_MASTER_KEY` and the hexadecimal value as `WEBHOOK_SECRET` in
-`.dev.vars`:
+Open `.dev.vars` in any text editor and replace only the `BOT_TOKEN` value with the token from
+BotFather. Leave the other two placeholders unchanged for now:
 
 ```env
-BOT_TOKEN=123456789:replace-with-the-bot-token
-PS_MASTER_KEY=replace-with-base64-encoded-32-random-bytes
-WEBHOOK_SECRET=replace-with-at-least-32-random-characters
+BOT_TOKEN=123456789:replace-with-the-real-bot-token
+PS_MASTER_KEY=replace_with_base64_encoded_32_random_bytes
+WEBHOOK_SECRET=replace_with_random_secret
 ```
 
-Start local development:
+Do not upload `.dev.vars`, add it to Git, or send it to anyone.
+
+### 4. Test the bot locally
+
+Start the local bot:
 
 ```bash
 bun dev
 ```
 
-The script:
+On the first run, the script safely generates `PS_MASTER_KEY` and `WEBHOOK_SECRET` in `.dev.vars`,
+creates the local D1 database, applies its migrations, configures the Telegram commands, and prints
+the bot link. Open that link in Telegram and send `/start`. Local data is stored under `.wrangler/`.
 
-1. Validates `.dev.vars` and generates missing local cryptographic secrets.
-2. Reads the bot identity from Telegram.
-3. Configures English and Russian bot commands.
-4. Applies all migrations to the local D1 database.
-5. Starts the local Worker.
-6. Receives Telegram updates through long polling and forwards them to the Worker.
+Press `Ctrl+C` in the terminal to stop the bot.
 
-Secret generation applies only to missing values or untouched example placeholders. The script
-fails on any other invalid secret instead of silently replacing an existing key.
+Local development uses Telegram long polling, which removes any existing webhook for the same bot.
+After the production bot is deployed, either use a second BotFather bot for local development or run
+`bun run deploy` again when local testing is finished.
 
-Local D1 state is stored under `.wrangler/`. Press `Ctrl+C` to stop the bot.
+### 5. Create the Cloudflare database
 
-Long polling removes the active Telegram webhook. Use a separate BotFather bot for local
-development after a production instance is live, or run `bun run deploy` afterwards to restore the
-production webhook.
-
-## Configuration
-
-Runtime configuration is validated in `src/config.ts`.
-
-| Name             | Location                  | Required | Description                                             |
-| ---------------- | ------------------------- | -------- | ------------------------------------------------------- |
-| `BOT_TOKEN`      | Secret                    | Yes      | Telegram bot token                                      |
-| `PS_MASTER_KEY`  | Secret                    | Yes      | Base64-encoded 32-byte AES-GCM master key               |
-| `WEBHOOK_SECRET` | Secret                    | Yes      | Telegram webhook secret, 32-256 URL-safe characters     |
-| `BOT_NAME`       | `wrangler.jsonc` variable | Yes      | Telegram bot display name used without a network lookup |
-| `BOT_USERNAME`   | `wrangler.jsonc` variable | Yes      | Telegram bot username without `@`                       |
-| `DB`             | D1 binding                | Yes      | D1 database for tokens, favorites, and preferences      |
-
-`PS_MASTER_KEY` must remain stable after users connect tokens. Changing it makes existing encrypted
-tokens unreadable. `WEBHOOK_SECRET` must have the same value in the deployed Worker and in the
-environment that runs `bun run deploy`.
-
-Do not commit `.dev.vars`, `.env`, BotFather tokens, PandaScore tokens, or Cloudflare credentials.
-
-## Cloudflare deployment
-
-Authenticate Wrangler:
+Authorize Wrangler in your Cloudflare account:
 
 ```bash
 bunx wrangler login
 ```
 
-Create a D1 database in the target Cloudflare account:
+Create the production D1 database:
 
 ```bash
 bunx wrangler d1 create d2-schedule-bot
 ```
 
-Replace `database_id` in `wrangler.jsonc` with the returned UUID. Change the Worker `name` when
-deploying a fork under a different name. `bun run deploy` synchronizes `BOT_NAME` and `BOT_USERNAME`
-with the BotFather bot automatically.
+Wrangler prints a `database_id` UUID. Open `wrangler.jsonc` and replace the existing `database_id`
+value with that UUID. Only the value between the quotes needs to change. You may also change the
+top-level Worker `name` if you want a different name in the Cloudflare dashboard.
 
-Run the complete deployment:
+### 6. Deploy the bot
+
+Deploy the Worker and connect it to Telegram:
 
 ```bash
 bun run deploy
 ```
 
-When `.dev.vars` exists, `bun run deploy` validates it and uploads its runtime secrets with the Worker.
-The command also reads the current bot identity from Telegram, applies pending remote D1 migrations,
-deploys the Worker with the correct bot name and username, reads the published `workers.dev` URL,
-configures the secret-protected Telegram webhook, installs English and Russian commands, and verifies
-the final webhook URL through Telegram.
+The command uploads the secrets from `.dev.vars`, applies remote D1 migrations, deploys the Worker,
+configures the protected Telegram webhook and English and Russian commands, and verifies the final
+webhook URL. When it finishes successfully, open the bot in Telegram and send `/start`.
 
-The deployment fails instead of silently succeeding when migrations, Worker deployment, webhook
-configuration, command configuration, or webhook verification fails.
+Keep a secure backup of `.dev.vars`. In particular, `PS_MASTER_KEY` must not change after users have
+connected PandaScore tokens: a different key cannot decrypt the existing tokens. Re-running
+`bun run deploy` with the same file is safe.
+
+### 7. Set the BotFather artwork
+
+Ready-to-upload artwork is available in `assets/botfather/`. In BotFather, send `/mybots`, select
+the bot and open **Edit Bot**:
+
+- Choose **Edit Botpic** and upload [`botpic.png`](assets/botfather/botpic.png) as the profile
+  picture.
+- Choose **Edit Description Picture** and upload
+  [`description-picture.png`](assets/botfather/description-picture.png) as the image shown with the
+  bot description to new users.
+
+### 8. Optional: enable Premium stream-provider icons
+
+The public [`Dota 2 Stream Providers`](https://t.me/addemoji/Dota2StreamProviders) pack and its IDs
+are already configured. If the account that owns the bot has Telegram Premium, set
+`TELEGRAM_PREMIUM` to `"true"` in `wrangler.jsonc`, run `bun check` and deploy. Users do not need
+Premium. Otherwise, keep the default `"false"` and the bot will use complete text links. The
+ordinary emoji assigned while creating the pack exist only as Telegram's mandatory custom-emoji
+placeholders. Telegram may display a placeholder in system notifications or forwarded messages where
+the custom emoji cannot be rendered; the bot never uses it as a standalone provider label.
+
+To rebuild an icon or create an independent pack, follow the short
+[`PACK.md`](assets/custom-emoji/dota2-stream-providers/PACK.md) guide. The repository keeps only the
+ready-to-upload WEBP files, source references and conversion instructions. For another pack, replace
+the corresponding public `customEmojiId` values in `src/bot/streams.ts`.
 
 ### Automatic deployment from Git
 
-Cloudflare Workers Builds can deploy every push to `main` without a GitHub Actions deployment
-workflow:
+The manual deployment above is enough to run the bot. To deploy future changes automatically, fork
+this repository to your GitHub account and connect that fork through Cloudflare Workers Builds:
 
-1. Open the Worker in Cloudflare -> **Settings** -> **Build**.
-2. Connect the GitHub repository.
-3. Under **API token**, select or create a user token that can deploy Workers and also has
-   **Account** -> **D1** -> **Edit** for the target account. This additional permission is required
-   because `bun run deploy` applies remote D1 migrations.
-4. Set the production branch to `main`.
-5. Set the build command to `bun check`.
-6. Set the deploy command to `bun run deploy`.
-7. Disable non-production branch builds unless preview deployments are required.
-8. Add `BOT_TOKEN` and `WEBHOOK_SECRET` as build secrets.
-9. Add `NODE_VERSION=22.18.0` and `BUN_VERSION=1.3.14` as build variables.
+1. Open the Worker in Cloudflare -> **Settings** -> **Build** and connect the GitHub repository.
+2. Under **API token**, select or create a token that can deploy Workers and has **Account** ->
+   **D1** -> **Edit** for the target account.
+3. Set the production branch to `main`.
+4. Set the build command to `bun check`.
+5. Set the deploy command to `bun run deploy`.
+6. Disable non-production branch builds unless you need preview deployments.
+7. Add `BOT_TOKEN` and `WEBHOOK_SECRET` as build secrets. Use the same values as in `.dev.vars`.
+8. Add `NODE_VERSION=22.18.0` and `BUN_VERSION=1.3.14` as build variables.
 
-Build secrets are available only to the deployment process. The Worker still requires its separate
-runtime `BOT_TOKEN`, `PS_MASTER_KEY`, and `WEBHOOK_SECRET` secrets under **Variables and Secrets**.
-The build and runtime values for `BOT_TOKEN` and `WEBHOOK_SECRET` must match.
+The initial manual deployment already creates the Worker's runtime secrets. Do not delete
+`BOT_TOKEN`, `PS_MASTER_KEY`, or `WEBHOOK_SECRET` from **Variables and Secrets**. Build secrets are
+separate and are available only while Cloudflare runs the deployment command.
 
 Cloudflare configuration references:
 
@@ -288,6 +311,25 @@ Cloudflare configuration references:
 - [API token permissions](https://developers.cloudflare.com/fundamentals/api/reference/permissions/)
 - [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)
+
+## Configuration reference
+
+Runtime configuration is validated in `src/config.ts`.
+
+| Name               | Location                  | Required | Description                                             |
+| ------------------ | ------------------------- | -------- | ------------------------------------------------------- |
+| `BOT_TOKEN`        | Secret                    | Yes      | Telegram bot token                                      |
+| `PS_MASTER_KEY`    | Secret                    | Yes      | Base64-encoded 32-byte AES-GCM master key               |
+| `WEBHOOK_SECRET`   | Secret                    | Yes      | Telegram webhook secret, 32-256 URL-safe characters     |
+| `BOT_NAME`         | `wrangler.jsonc` variable | Yes      | Telegram bot display name used without a network lookup |
+| `BOT_USERNAME`     | `wrangler.jsonc` variable | Yes      | Telegram bot username without `@`                       |
+| `TELEGRAM_PREMIUM` | `wrangler.jsonc` variable | No       | Whether the bot owner has Premium; defaults to `false`  |
+| `DB`               | D1 binding                | Yes      | D1 database for tokens, favorites, and preferences      |
+
+`bun dev` and `bun run deploy` synchronize `BOT_NAME` and `BOT_USERNAME` with the BotFather bot.
+`WEBHOOK_SECRET` must have the same value in the deployed Worker and in the environment that runs
+`bun run deploy`. `TELEGRAM_PREMIUM` accepts only `"true"` or `"false"`; valid provider IDs are
+still required before the enabled mode can render custom emoji.
 
 ## Data and security
 
@@ -301,8 +343,8 @@ PandaScore tokens are encrypted with AES-256-GCM. Every write uses a random 96-b
 Telegram user ID is included as authenticated additional data. A ciphertext copied to a different
 user ID cannot be decrypted successfully.
 
-Webhook requests must contain the configured Telegram secret header. Bot interactions are limited
-to private chats, sensitive messages are deleted before persistence, and errors are logged without
+Webhook requests must contain the configured Telegram secret header. Bot interactions are limited to
+private chats, sensitive messages are deleted before persistence, and errors are logged without
 secret values.
 
 Users who do not want to trust the hosted instance can deploy this repository in their own
@@ -320,6 +362,8 @@ Cloudflare account and use a private D1 database. The complete source is availab
 - Dates use the device language and time zone through Telegram in automatic mode, or the saved
   language and UTC offset in manual mode
 - Link previews are disabled in bot messages
+- Broadcast labels and all parenthesized details are links; configured Premium icons replace only
+  known provider names
 - Cloudflare observability is enabled in `wrangler.jsonc`
 
 ## Development
@@ -327,16 +371,17 @@ Cloudflare account and use a private D1 database. The complete source is availab
 Run the complete local gate:
 
 ```bash
-bun check
+bun check      # Full local gate
+bun check:fix  # Full local gate with automatic fixes
 ```
 
 Focused commands:
 
 ```bash
-bun run build      # Run a dry deployment build
-bun check:types    # Generate Worker types and run TypeScript
 bun lint           # Ultracite check
 bun lint:fix       # Ultracite fixes
+bun check:types    # Generate Worker types and run TypeScript
+bun run build      # Run a dry deployment build
 bun check:unused   # Knip
 bun check:vulns    # Production dependency audit
 bun run test       # Vitest
@@ -346,15 +391,16 @@ bun test:coverage  # Coverage thresholds
 ## Project structure
 
 ```text
-assets/botfather/ Ready-to-upload Telegram bot artwork
-migrations/       D1 schema migrations
-scripts/          Local development and production deployment entry points
-src/api/          PandaScore client and response schemas
-src/bot/          grammY handlers, keyboards, messages, and runtime helpers
-src/locales/      Static English and Russian translations
-src/storage/      D1 token, favorite, and preference stores
-tests/            Worker, API, storage, message, and handler tests
-wrangler.jsonc    Cloudflare Worker, D1, variables, and observability configuration
+assets/botfather/     Ready-to-upload Telegram bot artwork
+assets/custom-emoji/  Ready-to-upload stream-provider emoji and its short guide
+migrations/           D1 schema migrations
+scripts/              Local development and production deployment entry points
+src/api/              PandaScore client and response schemas
+src/bot/              grammY handlers, keyboards, messages, and runtime helpers
+src/locales/          Static English and Russian translations
+src/storage/          D1 token, favorite, and preference stores
+tests/                Worker, API, storage, message, and handler tests
+wrangler.jsonc        Cloudflare Worker, D1, variables, and observability configuration
 ```
 
 ## Tech stack
@@ -369,4 +415,4 @@ wrangler.jsonc    Cloudflare Worker, D1, variables, and observability configurat
 
 ## License
 
-MIT
+[MIT](LICENSE)

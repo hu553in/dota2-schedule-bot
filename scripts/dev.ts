@@ -1,9 +1,12 @@
-import { type ChildProcess, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { access, chmod, readFile, writeFile } from "node:fs/promises";
 import { parseEnv } from "node:util";
+
 import { Api, Bot } from "grammy";
 import { unstable_startWorker } from "wrangler";
+
 import {
   BOT_ALLOWED_UPDATES,
   configureBotCommands,
@@ -33,7 +36,7 @@ interface DevVars {
 
 function setEnvValue(source: string, key: string, value: string): string {
   const line = `${key}=${value}`;
-  const pattern = new RegExp(`^${key}=.*$`, "gm");
+  const pattern = new RegExp(`^${key}=.*$`, "gmu");
   if (pattern.test(source)) {
     return source.replace(pattern, line);
   }
@@ -63,7 +66,7 @@ async function loadDevSecrets(): Promise<DevSecrets> {
     () => true,
     () => false
   );
-  let source = fileExists ? await readFile(DEV_VARS_PATH, "utf8") : "";
+  let source = fileExists ? await readFile(DEV_VARS_PATH, "utf-8") : "";
   let values: DevVars;
   try {
     values = parseDevVars(source);
@@ -164,7 +167,9 @@ async function run(): Promise<void> {
   try {
     await localWorker.ready;
   } catch (error) {
-    await localWorker.dispose().catch(() => undefined);
+    await localWorker.dispose().catch(() => {
+      /* empty */
+    });
     throw error;
   }
 
@@ -200,7 +205,9 @@ async function run(): Promise<void> {
     stopping = true;
     console.log("\nStopping local development...");
     if (pollingBot.isRunning()) {
-      pollingStop ??= pollingBot.stop().catch(() => undefined);
+      pollingStop ??= pollingBot.stop().catch(() => {
+        /* empty */
+      });
     }
   };
   const onInterrupt = () => stop();

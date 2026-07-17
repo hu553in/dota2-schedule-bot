@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { type BotContext, localizationMiddleware } from "../src/bot/context.ts";
+
+import { localizationMiddleware } from "../src/bot/context.ts";
+import type { BotContext } from "../src/bot/context.ts";
 
 describe("localization middleware", () => {
   it("uses English without a Telegram user and skips D1", async () => {
@@ -10,16 +12,16 @@ describe("localization middleware", () => {
     };
     const middleware = localizationMiddleware(preferencesStore);
     const context = {} as BotContext;
-    const next = vi.fn(async () => undefined);
+    const next = vi.fn(async () => {});
     await middleware(context, next);
     expect(preferencesStore.get).not.toHaveBeenCalled();
     expect(context.locale).toBe("en");
-    expect(context.preferencesAvailable).toBe(true);
+    expect(context.preferencesAvailable).toBeTruthy();
     expect(next).toHaveBeenCalledOnce();
   });
 
   it("falls back safely when D1 rejects with a non-Error value", async () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     const middleware = localizationMiddleware({
       get: vi.fn().mockRejectedValue("database unavailable"),
       setLanguage: vi.fn(),
@@ -35,10 +37,10 @@ describe("localization middleware", () => {
     } as BotContext;
     await middleware(
       context,
-      vi.fn(async () => undefined)
+      vi.fn(async () => {})
     );
     expect(context.locale).toBe("ru");
-    expect(context.preferencesAvailable).toBe(false);
+    expect(context.preferencesAvailable).toBeFalsy();
     expect(log).toHaveBeenCalledWith("Preferences storage read failed", {
       message: "database unavailable",
     });

@@ -7,20 +7,21 @@
   "preview_urls": false,
   "vars": {
     "BOT_NAME": "Dota 2 schedule bot",
-    "BOT_USERNAME": "d2_schedule_bot"
+    "BOT_USERNAME": "d2_schedule_bot",
+    "TELEGRAM_PREMIUM": "false",
   },
   "secrets": {
-    "required": ["BOT_TOKEN", "PS_MASTER_KEY", "WEBHOOK_SECRET"]
+    "required": ["BOT_TOKEN", "PS_MASTER_KEY", "WEBHOOK_SECRET"],
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "d2-schedule-bot",
       "database_id": "a350f693-71c2-4765-b0a7-889f6e962fc0",
-      "migrations_dir": "migrations"
-    }
-  ]
+      "migrations_dir": "migrations",
+    },
+  ],
 }

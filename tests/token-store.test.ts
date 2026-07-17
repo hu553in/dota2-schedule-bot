@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+
 import {
   createTokenStore,
   TokenIntegrityError,
@@ -14,10 +15,10 @@ describe("TokenStore", () => {
 
   it("creates, updates, reads and deletes encrypted tokens", async () => {
     const store = await createTokenStore(testEnv.DB, MASTER_KEY);
-    expect(await store.get(42)).toBeNull();
+    await expect(store.get(42)).resolves.toBeNull();
 
     await store.set(42, "first-token");
-    expect(await store.get(42)).toBe("first-token");
+    await expect(store.get(42)).resolves.toBe("first-token");
     const row = await testEnv.DB.prepare(
       "SELECT encrypted_token FROM user_tokens WHERE user_id = ?"
     )
@@ -26,10 +27,10 @@ describe("TokenStore", () => {
     expect(row?.encrypted_token).not.toContain("first-token");
 
     await store.set(42, "updated-token");
-    expect(await store.get("42")).toBe("updated-token");
+    await expect(store.get("42")).resolves.toBe("updated-token");
 
     await store.delete(42);
-    expect(await store.get(42)).toBeNull();
+    await expect(store.get(42)).resolves.toBeNull();
   });
 
   it("binds ciphertext to the Telegram user id", async () => {

@@ -1,4 +1,6 @@
-import { createInstance, type TFunction } from "i18next";
+import { createInstance } from "i18next";
+import type { TFunction } from "i18next";
+
 import english from "./locales/en.json" with { type: "json" };
 import russian from "./locales/ru.json" with { type: "json" };
 

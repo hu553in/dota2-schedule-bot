@@ -1,8 +1,10 @@
 import { webhookCallback } from "grammy";
+
 import { PandaScoreApi } from "./api/pandascore.ts";
 import { createBot } from "./bot/create-bot.ts";
 import { logWebhookError } from "./bot/errors.ts";
-import { parseConfig, type WorkerEnv } from "./config.ts";
+import { parseConfig } from "./config.ts";
+import type { WorkerEnv } from "./config.ts";
 import { FavoritesStore } from "./storage/favorites-store.ts";
 import { PreferencesStore } from "./storage/preferences-store.ts";
 import { createTokenStore } from "./storage/token-store.ts";
@@ -25,6 +27,7 @@ export async function createWebhook(
     botToken: config.botToken,
     favoritesStore: new FavoritesStore(environment.DB),
     preferencesStore: new PreferencesStore(environment.DB),
+    telegramPremium: config.telegramPremium,
     tokenStore: await createTokenStore(environment.DB, config.masterKey),
   });
   return webhookCallback(bot, "cloudflare-mod", {
@@ -42,7 +45,9 @@ export default {
       };
     }
     try {
-      return await (await cachedWebhook.handler)(request);
+      return await (
+        await cachedWebhook.handler
+      )(request);
     } catch (error) {
       logWebhookError(error);
       return new Response(null, { status: 500 });

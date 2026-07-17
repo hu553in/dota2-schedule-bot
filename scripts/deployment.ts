@@ -1,11 +1,18 @@
+import { z } from "zod";
+
 import {
   botTokenSchema,
   masterKeySchema,
   webhookSecretSchema,
 } from "../src/config.ts";
 
-const WORKERS_DEV_URL_PATTERN = /https:\/\/(?:[a-z0-9-]+\.)+workers\.dev\/?/giu;
 const TRAILING_SLASH_PATTERN = /\/$/u;
+
+const wranglerDeployOutputSchema = z.object({
+  targets: z.array(z.string()),
+  type: z.literal("deploy"),
+  version: z.literal(1),
+});
 
 export interface DeploymentVariables {
   BOT_TOKEN: string | undefined;
@@ -64,8 +71,32 @@ export function workerDeployArguments(
 }
 
 export function workerUrlFromDeployOutput(output: string): string {
-  const matches = [...output.matchAll(WORKERS_DEV_URL_PATTERN)];
-  const url = matches.at(-1)?.[0];
+  let deployment: z.infer<typeof wranglerDeployOutputSchema> | undefined;
+  try {
+    for (const line of output.split("\n")) {
+      if (line.trim().length === 0) {
+        continue;
+      }
+      const parsed = wranglerDeployOutputSchema.safeParse(JSON.parse(line));
+      if (parsed.success) {
+        deployment = parsed.data;
+      }
+    }
+  } catch (error) {
+    throw new Error("Wrangler wrote invalid deployment output.", {
+      cause: error,
+    });
+  }
+
+  const url = deployment?.targets.findLast((target) => {
+    if (!URL.canParse(target)) {
+      return false;
+    }
+    const parsed = new URL(target);
+    return (
+      parsed.protocol === "https:" && parsed.hostname.endsWith(".workers.dev")
+    );
+  });
   if (!url) {
     throw new Error("Wrangler did not report a workers.dev deployment URL.");
   }

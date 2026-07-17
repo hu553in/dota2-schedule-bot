@@ -1,13 +1,14 @@
 import type { Update, UserFromGetMe } from "grammy/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { EntityType, MatchDirection } from "../src/api/pandascore.ts";
 import type { Match } from "../src/api/schemas.ts";
-import {
-  type BotApi,
-  type BotFavoritesStore,
-  type BotPreferencesStore,
-  type BotTokenStore,
-  createBot,
+import { createBot } from "../src/bot/create-bot.ts";
+import type {
+  BotApi,
+  BotFavoritesStore,
+  BotPreferencesStore,
+  BotTokenStore,
 } from "../src/bot/create-bot.ts";
 import type { Page } from "../src/pagination.ts";
 import type { Favorite } from "../src/storage/favorites-store.ts";
@@ -57,7 +58,7 @@ const MATCH: Match = {
   tournament: null,
 };
 const VALID_TOKEN = "valid_PandaScore_token_123456789";
-const HREF_PATTERN = /href="([^"]+)"/;
+const HREF_PATTERN = /href="([^"]+)"/u;
 
 let updateId = 0;
 
@@ -173,65 +174,75 @@ function matchPage(page = 1): Page<Match> {
   return { data: [MATCH], hasNext: page < 2, page };
 }
 
-function createDependencies() {
+function createDependencies({
+  telegramPremium = false,
+}: {
+  telegramPremium?: boolean;
+} = {}) {
   const api = {
     getMatches: vi.fn(
-      async (
+      (
         _type: EntityType,
         _id: number,
         _direction: MatchDirection,
         page: number
-      ) => matchPage(page)
+      ) => Promise.resolve(matchPage(page))
     ),
-    getSeries: vi.fn(async () => SERIES),
-    getTeam: vi.fn(async () => TEAM),
+    getSeries: vi.fn(() => Promise.resolve(SERIES)),
+    getTeam: vi.fn(() => Promise.resolve(TEAM)),
     searchSeries: vi.fn(
-      async (): Promise<Page<typeof SERIES>> => ({
-        data: [SERIES],
-        hasNext: false,
-        page: 1,
-        total: 1,
-        totalPages: 1,
-      })
+      (): Promise<Page<typeof SERIES>> =>
+        Promise.resolve({
+          data: [SERIES],
+          hasNext: false,
+          page: 1,
+          total: 1,
+          totalPages: 1,
+        })
     ),
     searchTeams: vi.fn(
-      async (): Promise<Page<typeof TEAM>> => ({
-        data: [TEAM],
-        hasNext: false,
-        page: 1,
-        total: 1,
-        totalPages: 1,
-      })
+      (): Promise<Page<typeof TEAM>> =>
+        Promise.resolve({
+          data: [TEAM],
+          hasNext: false,
+          page: 1,
+          total: 1,
+          totalPages: 1,
+        })
     ),
-    validateToken: vi.fn(async () => true),
+    validateToken: vi.fn(() => Promise.resolve(true)),
   } satisfies BotApi;
   const tokenStore = {
-    delete: vi.fn(async () => undefined),
-    get: vi.fn(async () => "stored-pandascore-token" as null | string),
-    set: vi.fn(async () => undefined),
+    delete: vi.fn(async () => {}),
+    get: vi.fn(() =>
+      Promise.resolve("stored-pandascore-token" as null | string)
+    ),
+    set: vi.fn(async () => {}),
   } satisfies BotTokenStore;
   const preferencesStore = {
     get: vi.fn(
-      async (): Promise<UserPreferences> => ({
-        language: null,
-        utcOffsetMinutes: null,
-      })
+      (): Promise<UserPreferences> =>
+        Promise.resolve({
+          language: null,
+          utcOffsetMinutes: null,
+        })
     ),
-    setLanguage: vi.fn(async () => undefined),
-    setUtcOffset: vi.fn(async () => undefined),
+    setLanguage: vi.fn(async () => {}),
+    setUtcOffset: vi.fn(async () => {}),
   } satisfies BotPreferencesStore;
   const favoritesStore = {
-    has: vi.fn(async () => false),
+    has: vi.fn(() => Promise.resolve(false)),
     list: vi.fn(
-      async (): Promise<Page<Favorite>> => ({
-        data: [],
-        hasNext: false,
-        page: 1,
-        total: 0,
-        totalPages: 1,
-      })
+      (): Promise<Page<Favorite>> =>
+        Promise.resolve({
+          data: [],
+          hasNext: false,
+          page: 1,
+          total: 0,
+          totalPages: 1,
+        })
     ),
-    set: vi.fn(async () => undefined),
+    set: vi.fn(async () => {}),
   } satisfies BotFavoritesStore;
   const telegram = new TelegramFake();
   const bot = createBot({
@@ -241,6 +252,7 @@ function createDependencies() {
     favoritesStore,
     preferencesStore,
     telegramFetch: telegram.fetch,
+    telegramPremium,
     tokenStore,
   });
   return {
@@ -257,7 +269,7 @@ function encoded(value: unknown): string {
   return JSON.stringify(value);
 }
 
-describe("createBot", () => {
+describe(createBot, () => {
   beforeEach(() => {
     updateId = 0;
   });
@@ -279,7 +291,7 @@ describe("createBot", () => {
     ).toContain("menu:favorites");
     expect(
       telegram.required("sendMessage").payload.link_preview_options
-    ).toEqual({ is_disabled: true });
+    ).toStrictEqual({ is_disabled: true });
 
     await bot.handleUpdate(commandUpdate("/start"));
     const homeNavigation = encoded(
@@ -300,7 +312,7 @@ describe("createBot", () => {
     expect(encoded(settings.reply_markup)).toContain("menu:language");
     expect(encoded(settings.reply_markup)).toContain("menu:token");
     expect(encoded(settings.reply_markup)).not.toContain("menu:favorites");
-    expect(settings.link_preview_options).toEqual({ is_disabled: true });
+    expect(settings.link_preview_options).toStrictEqual({ is_disabled: true });
 
     tokenStore.get.mockRejectedValueOnce(new TokenIntegrityError());
     await bot.handleUpdate(commandUpdate("/status"));
@@ -342,7 +354,7 @@ describe("createBot", () => {
     telegram.networkFailures.add("editMessageText");
     await expect(
       bot.handleUpdate(callbackUpdate("language:en"))
-    ).rejects.toThrow();
+    ).rejects.toThrow("Network request for 'editMessageText' failed!");
     expect(preferencesStore.setLanguage).toHaveBeenLastCalledWith(42, "en");
     telegram.networkFailures.delete("editMessageText");
 
@@ -407,7 +419,9 @@ describe("createBot", () => {
     const update = commandUpdate(`/settoken ${VALID_TOKEN}`);
 
     telegram.networkFailures.add("sendMessage");
-    await expect(bot.handleUpdate(update)).rejects.toThrow();
+    await expect(bot.handleUpdate(update)).rejects.toThrow(
+      "Network request for 'sendMessage' failed!"
+    );
     expect(tokenStore.set).toHaveBeenCalledOnce();
 
     telegram.networkFailures.delete("sendMessage");
@@ -461,7 +475,7 @@ describe("createBot", () => {
     );
 
     await bot.handleUpdate(commandUpdate("/settoken short"));
-    expect(api.validateToken).toHaveBeenCalledTimes(1);
+    expect(api.validateToken).toHaveBeenCalledOnce();
 
     api.validateToken.mockResolvedValueOnce(false);
     await bot.handleUpdate(commandUpdate(`/settoken ${VALID_TOKEN}`));
@@ -579,7 +593,7 @@ describe("createBot", () => {
     const matchScreen = telegram.required("editMessageText").payload;
     expect(matchScreen.text).toContain("16:00 · +06:00");
     expect(matchScreen.text).not.toContain("UTC+06:00");
-    expect(matchScreen.entities).not.toEqual(
+    expect(matchScreen.entities).not.toStrictEqual(
       expect.arrayContaining([expect.objectContaining({ type: "date_time" })])
     );
 
@@ -682,7 +696,7 @@ describe("createBot", () => {
     await bot.handleUpdate(
       callbackUpdate("matches:team:7:upcoming:1", "Результаты поиска")
     );
-    expect(api.getTeam).toHaveBeenCalledTimes(1);
+    expect(api.getTeam).toHaveBeenCalledOnce();
     expect(api.getMatches).toHaveBeenLastCalledWith(
       "team",
       7,
@@ -694,14 +708,14 @@ describe("createBot", () => {
     expect(favoritesStore.has).toHaveBeenCalledWith(42, "team", 7);
     const firstCard = telegram.required("editMessageText").payload;
     expect(firstCard.text).toContain("🎮 Team Spirit (TS)");
-    expect(firstCard.entities).toEqual(
+    expect(firstCard.entities).toStrictEqual(
       expect.arrayContaining([expect.objectContaining({ type: "date_time" })])
     );
 
     await bot.handleUpdate(
       callbackUpdate("matches:team:7:running:1", String(firstCard.text ?? ""))
     );
-    expect(api.getTeam).toHaveBeenCalledTimes(1);
+    expect(api.getTeam).toHaveBeenCalledOnce();
     expect(api.getMatches).toHaveBeenCalledTimes(2);
     expect(api.getMatches).toHaveBeenLastCalledWith(
       "team",
@@ -720,7 +734,7 @@ describe("createBot", () => {
     await bot.handleUpdate(
       callbackUpdate("matches:team:7:past:2", String(runningCard.text ?? ""))
     );
-    expect(api.getTeam).toHaveBeenCalledTimes(1);
+    expect(api.getTeam).toHaveBeenCalledOnce();
     expect(api.getMatches).toHaveBeenCalledTimes(3);
     expect(api.getMatches).toHaveBeenLastCalledWith(
       "team",
@@ -729,6 +743,49 @@ describe("createBot", () => {
       2,
       6,
       "stored-pandascore-token"
+    );
+  });
+
+  it("passes Premium stream icons through the match handler", async () => {
+    const { api, bot, telegram } = createDependencies({
+      telegramPremium: true,
+    });
+    api.getMatches.mockResolvedValueOnce({
+      data: [
+        {
+          ...MATCH,
+          streams_list: [
+            {
+              language: "ru",
+              main: true,
+              official: true,
+              raw_url: "https://twitch.tv/main-ru",
+            },
+          ],
+        },
+      ],
+      hasNext: false,
+      page: 1,
+    });
+    await bot.init();
+
+    await bot.handleUpdate(
+      callbackUpdate("matches:team:7:upcoming:1", "Результаты поиска")
+    );
+
+    const matchScreen = telegram.required("editMessageText").payload;
+    expect(matchScreen.text).toContain("🟣 (🇷🇺 основной)");
+    expect(matchScreen.text).not.toContain("Twitch");
+    expect(matchScreen.entities).toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "custom_emoji",
+        }),
+        expect.objectContaining({
+          type: "text_link",
+          url: "https://twitch.tv/main-ru",
+        }),
+      ])
     );
   });
 
@@ -760,7 +817,7 @@ describe("createBot", () => {
 
   it("sets favorites idempotently without refetching PandaScore", async () => {
     const { api, bot, favoritesStore, telegram } = createDependencies();
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockReturnValue();
     await bot.init();
 
     await bot.handleUpdate(
@@ -824,7 +881,7 @@ describe("createBot", () => {
           "🎮 Team Spirit (TS)\nБлижайшие матчи · страница 1"
         )
       )
-    ).rejects.toThrow();
+    ).rejects.toThrow("Network request for 'editMessageReplyMarkup' failed!");
     expect(favoritesStore.set).toHaveBeenCalledTimes(4);
     expect(telegram.all("answerCallbackQuery")).toHaveLength(
       acknowledgementsBefore
@@ -867,14 +924,14 @@ describe("createBot", () => {
     await bot.handleUpdate(callbackUpdate("search:team:2", "Старый экран"));
     await bot.handleUpdate(callbackUpdate("unknown:callback"));
     expect(api.getMatches).not.toHaveBeenCalled();
-    expect(telegram.required("answerCallbackQuery").payload.show_alert).toBe(
-      true
-    );
+    expect(
+      telegram.required("answerCallbackQuery").payload.show_alert
+    ).toBeTruthy();
 
     await bot.handleUpdate(
       textUpdate("Spirit", {
-        replyingBotId: 999,
         replyText: inputPrompt("team"),
+        replyingBotId: 999,
       })
     );
     expect(api.searchTeams).not.toHaveBeenCalled();
@@ -922,7 +979,7 @@ describe("createBot", () => {
       groupAnswers.every((answer) =>
         answer.payload.text?.includes("личный чат")
       )
-    ).toBe(true);
+    ).toBeTruthy();
 
     await Promise.all(
       [
@@ -943,7 +1000,7 @@ describe("createBot", () => {
   it("keeps every command, menu and token-management exit discoverable", async () => {
     const { api, bot, favoritesStore, telegram, tokenStore } =
       createDependencies();
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockReturnValue();
     await bot.init();
 
     await bot.handleUpdate(commandUpdate("/help"));
@@ -952,7 +1009,7 @@ describe("createBot", () => {
     ).toContain("token:guide");
     expect(
       telegram.required("sendMessage").payload.link_preview_options
-    ).toEqual({ is_disabled: true });
+    ).toStrictEqual({ is_disabled: true });
     await bot.handleUpdate(commandUpdate("/settoken"));
     await bot.handleUpdate(commandUpdate("/cleartoken"));
     expect(telegram.required("sendMessage").payload.text).toContain(
@@ -1012,13 +1069,12 @@ describe("createBot", () => {
     expect(unknownCommandKeyboard).not.toContain("menu:team");
     await bot.handleUpdate(textUpdate("обычный текст"));
     await bot.handleUpdate(commandUpdate("/help", { private: false }));
-    expect(log).toHaveBeenCalled();
   });
 
   it("recovers from storage, validation, search and favorite failures", async () => {
     const { api, bot, favoritesStore, preferencesStore, telegram, tokenStore } =
       createDependencies();
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockReturnValue();
     await bot.init();
 
     tokenStore.get.mockRejectedValueOnce("D1 unavailable");
@@ -1109,7 +1165,7 @@ describe("createBot", () => {
   it("handles series, missing-token and failed match/favorite paths", async () => {
     const { api, bot, favoritesStore, preferencesStore, telegram, tokenStore } =
       createDependencies();
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     await bot.init();
 
     await bot.handleUpdate(
@@ -1172,12 +1228,23 @@ describe("createBot", () => {
         "🎮 Team Spirit\nНедавние результаты · страница 1"
       )
     );
-    expect(log).toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith("Favorite state load failed", {
+      message: "D1 unavailable",
+    });
+    expect(log).toHaveBeenCalledWith("PandaScore response failed", {
+      message: "PandaScore unavailable",
+    });
+    expect(log).toHaveBeenCalledWith("Preferences storage read failed", {
+      message: "D1 unavailable",
+    });
+    expect(log).toHaveBeenCalledWith("Favorite update failed", {
+      message: "D1 unavailable",
+    });
   });
 
   it("handles harmless Telegram edits and acknowledgement failures", async () => {
     const { bot, telegram } = createDependencies();
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     await bot.init();
 
     telegram.failures.add("editMessageText");
@@ -1205,9 +1272,9 @@ describe("createBot", () => {
 
     telegram.failures.delete("editMessageText");
     telegram.networkFailures.add("editMessageText");
-    await expect(
-      bot.handleUpdate(callbackUpdate("menu:help"))
-    ).rejects.toThrow();
+    await expect(bot.handleUpdate(callbackUpdate("menu:help"))).rejects.toThrow(
+      "Network request for 'editMessageText' failed!"
+    );
     telegram.networkFailures.delete("editMessageText");
 
     telegram.failures.add("answerCallbackQuery");

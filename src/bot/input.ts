@@ -1,5 +1,7 @@
 import { StatelessQuestion } from "@grammyjs/stateless-question";
-import { Composer, type MiddlewareFn } from "grammy";
+import { Composer } from "grammy";
+import type { MiddlewareFn } from "grammy";
+
 import type { EntityType } from "../api/pandascore.ts";
 import type { BotContext } from "./context.ts";
 import { privateCommandOnly } from "./runtime.ts";

@@ -1,19 +1,23 @@
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseEnv } from "node:util";
+
 import { Api } from "grammy";
+
 import {
   configureBotCommands,
   configureBotWebhook,
 } from "../src/bot/commands.ts";
 import { errorMessage } from "../src/error-message.ts";
 import {
-  type DeploymentVariables,
   selectDeploymentSecrets,
   workerDeployArguments,
   workerUrlFromDeployOutput,
 } from "./deployment.ts";
+import type { DeploymentVariables } from "./deployment.ts";
 
 const DEV_VARS_PATH = ".dev.vars";
 const TELEGRAM_TIMEOUT_SECONDS = 5;
@@ -29,7 +33,7 @@ function parseDeploymentVariables(source: string): DeploymentVariables {
 
 async function localVariables(): Promise<DeploymentVariables | null> {
   try {
-    return parseDeploymentVariables(await readFile(DEV_VARS_PATH, "utf8"));
+    return parseDeploymentVariables(await readFile(DEV_VARS_PATH, "utf-8"));
   } catch (error) {
     if (isMissingFile(error)) {
       return null;
@@ -45,33 +49,40 @@ function environmentVariables(): DeploymentVariables {
   return { BOT_TOKEN, PS_MASTER_KEY, WEBHOOK_SECRET };
 }
 
-function runWrangler(arguments_: string[]): Promise<string> {
+function runWrangler(
+  arguments_: string[],
+  environment: NodeJS.ProcessEnv = {}
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn("wrangler", arguments_, {
-      stdio: ["inherit", "pipe", "pipe"],
+      env: { ...process.env, ...environment },
+      stdio: "inherit",
     });
-    let output = "";
 
-    child.stdout.on("data", (chunk: Buffer) => {
-      const value = chunk.toString();
-      output += value;
-      process.stdout.write(value);
-    });
-    child.stderr.on("data", (chunk: Buffer) => {
-      const value = chunk.toString();
-      output += value;
-      process.stderr.write(value);
-    });
     child.once("error", reject);
     child.once("close", (exitCode, signal) => {
       if (exitCode === 0) {
-        resolve(output);
+        resolve();
         return;
       }
       const status = signal ? `signal ${signal}` : `exit code ${exitCode ?? 1}`;
       reject(new Error(`Wrangler failed with ${status}.`));
     });
   });
+}
+
+async function deployWorker(arguments_: string[]): Promise<string> {
+  const outputDirectory = await mkdtemp(
+    path.join(tmpdir(), "d2-schedule-bot-deploy-")
+  );
+  const outputPath = path.join(outputDirectory, "wrangler.ndjson");
+
+  try {
+    await runWrangler(arguments_, { WRANGLER_OUTPUT_FILE_PATH: outputPath });
+    return workerUrlFromDeployOutput(await readFile(outputPath, "utf-8"));
+  } finally {
+    await rm(outputDirectory, { force: true, recursive: true });
+  }
 }
 
 async function run(): Promise<void> {
@@ -89,13 +100,12 @@ async function run(): Promise<void> {
   await runWrangler(["d1", "migrations", "apply", "DB", "--remote"]);
 
   console.log("Deploying the Worker...");
-  const deployOutput = await runWrangler(
+  const webhookUrl = await deployWorker(
     workerDeployArguments(
       botInfo,
       secrets.useLocalSecrets ? DEV_VARS_PATH : null
     )
   );
-  const webhookUrl = workerUrlFromDeployOutput(deployOutput);
 
   await configureBotWebhook(telegram, webhookUrl, secrets.webhookSecret);
   await configureBotCommands(telegram);

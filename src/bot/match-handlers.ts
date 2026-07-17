@@ -1,10 +1,12 @@
 import type { Bot } from "grammy";
 import { z } from "zod";
+
 import type { EntityType, MatchDirection } from "../api/pandascore.ts";
 import type { Match } from "../api/schemas.ts";
 import { errorMessage } from "../error-message.ts";
 import type { Translate } from "../localization.ts";
-import { callbackPageSchema, PAGE_SIZE, type Page } from "../pagination.ts";
+import { callbackPageSchema, PAGE_SIZE } from "../pagination.ts";
+import type { Page } from "../pagination.ts";
 import type { BotContext } from "./context.ts";
 import type { BotApi, BotDependencies } from "./dependencies.ts";
 import { replyApiError } from "./errors.ts";
@@ -24,9 +26,9 @@ import {
 } from "./runtime.ts";
 
 const MATCHES_PATTERN =
-  /^matches:(series|team):(\d+):(upcoming|running|past):(\d+)$/;
+  /^matches:(series|team):(\d+):(upcoming|running|past):(\d+)$/u;
 const FAVORITE_PATTERN =
-  /^favorite:set:(series|team):(\d+):(upcoming|running|past):(\d+):([01]):([01])$/;
+  /^favorite:set:(series|team):(\d+):(upcoming|running|past):(\d+):([01]):([01])$/u;
 const entityIdSchema = z.coerce.number().int().positive();
 
 async function loadEntityTitle(
@@ -45,7 +47,7 @@ export function registerMatchHandlers(
   bot: Bot<BotContext>,
   dependencies: BotDependencies
 ): void {
-  const { api, favoritesStore, tokenStore } = dependencies;
+  const { api, favoritesStore, telegramPremium, tokenStore } = dependencies;
 
   bot.callbackQuery(MATCHES_PATTERN, async (context) => {
     const type = context.match[1] as EntityType;
@@ -100,8 +102,11 @@ export function registerMatchHandlers(
       type,
       direction,
       matches,
-      context.preferences.utcOffsetMinutes,
-      notices.join(" ") || null
+      {
+        notice: notices.join(" ") || null,
+        telegramPremium,
+        utcOffsetMinutes: context.preferences.utcOffsetMinutes,
+      }
     );
     await showScreen(
       context,

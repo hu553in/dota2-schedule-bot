@@ -1,4 +1,5 @@
 import type { Bot } from "grammy";
+
 import { parseTimezoneInput } from "../timezone.ts";
 import type { BotContext } from "./context.ts";
 import type { BotDependencies } from "./dependencies.ts";
@@ -9,9 +10,34 @@ import {
   acknowledge,
   privateCommandOnly,
   replyStorageError,
-  type ScreenMode,
   showScreen,
 } from "./runtime.ts";
+import type { ScreenMode } from "./runtime.ts";
+
+async function showTimezone(
+  context: BotContext,
+  mode: ScreenMode,
+  knownOffset?: null | number
+): Promise<void> {
+  if (!context.preferencesAvailable && knownOffset === undefined) {
+    await replyStorageError(
+      context,
+      new Error("Preferences are unavailable"),
+      context.t("errors.timezoneOpen")
+    );
+    return;
+  }
+  const offset =
+    knownOffset === undefined
+      ? context.preferences.utcOffsetMinutes
+      : knownOffset;
+  await showScreen(
+    context,
+    timezoneMessage(context.t, offset),
+    timezoneKeyboard(context.t, offset === null),
+    mode
+  );
+}
 
 export function registerTimezoneHandlers(
   bot: Bot<BotContext>,
@@ -19,31 +45,6 @@ export function registerTimezoneHandlers(
   input: InputRouter
 ): void {
   const { botInfo, preferencesStore } = dependencies;
-
-  async function showTimezone(
-    context: BotContext,
-    mode: ScreenMode,
-    knownOffset?: null | number
-  ): Promise<void> {
-    if (!context.preferencesAvailable && knownOffset === undefined) {
-      await replyStorageError(
-        context,
-        new Error("Preferences are unavailable"),
-        context.t("errors.timezoneOpen")
-      );
-      return;
-    }
-    const offset =
-      knownOffset === undefined
-        ? context.preferences.utcOffsetMinutes
-        : knownOffset;
-    await showScreen(
-      context,
-      timezoneMessage(context.t, offset),
-      timezoneKeyboard(context.t, offset === null),
-      mode
-    );
-  }
 
   async function saveTimezone(
     context: BotContext,

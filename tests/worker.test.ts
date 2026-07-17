@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import worker, { createWebhook } from "../src/index.ts";
 import { TelegramFake } from "./helpers/telegram.ts";
 import { testEnv } from "./setup.ts";
@@ -27,17 +28,17 @@ function commandRequest(
   }) as unknown as Request<unknown, IncomingRequestCfProperties>;
 }
 
-beforeEach(async () => {
-  await testEnv.DB.exec(
-    "DELETE FROM user_tokens; DELETE FROM user_favorites; DELETE FROM user_preferences;"
-  );
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
 describe("Worker webhook", () => {
+  beforeEach(async () => {
+    await testEnv.DB.exec(
+      "DELETE FROM user_tokens; DELETE FROM user_favorites; DELETE FROM user_preferences;"
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("validates secrets, caches the app and keeps failures at the boundary", async () => {
     const telegram = new TelegramFake();
     vi.stubGlobal("fetch", telegram.fetch);
@@ -68,7 +69,7 @@ describe("Worker webhook", () => {
       )
     ).resolves.toMatchObject({ status: 200 });
 
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const log = vi.spyOn(console, "error").mockReturnValue();
     telegram.failures.add("sendMessage");
     const failed = await worker.fetch(commandRequest("/start"), testEnv);
     expect(failed.status).toBe(500);

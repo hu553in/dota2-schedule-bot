@@ -1,4 +1,4 @@
 {
-  "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignoreDependencies": ["@biomejs/biome", "cloudflare"]
+  "$schema": "./node_modules/knip/schema.json",
+  "ignoreDependencies": ["@commitlint/cli", "cloudflare"]
 }

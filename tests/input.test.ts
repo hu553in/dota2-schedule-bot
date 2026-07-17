@@ -1,5 +1,6 @@
 import type { MessageEntity } from "grammy/types";
 import { describe, expect, it, vi } from "vitest";
+
 import type { BotContext } from "../src/bot/context.ts";
 import { createInputRouter } from "../src/bot/input.ts";
 import { getTranslator } from "../src/localization.ts";
@@ -14,7 +15,7 @@ const QUESTION_ENTITY: MessageEntity = {
 };
 
 function answerContext(text?: string, privateChat = true): BotContext {
-  const reply = vi.fn(async () => ({ message_id: 2 }));
+  const reply = vi.fn(() => ({ message_id: 2 }));
   const chat = privateChat
     ? ({ first_name: "Test", id: 42, type: "private" } as const)
     : ({ id: -42, title: "Group", type: "supergroup" } as const);
@@ -47,7 +48,7 @@ function answerContext(text?: string, privateChat = true): BotContext {
 describe("stateless input router", () => {
   it("rejects duplicate handlers and missing registrations", async () => {
     const router = createInputRouter(BOT);
-    const handler = vi.fn(async () => undefined);
+    const handler = vi.fn(async () => {});
     const context = answerContext("Spirit");
     await expect(router.middleware()(context, vi.fn())).rejects.toThrow(
       "No input handler registered for team"
@@ -64,7 +65,7 @@ describe("stateless input router", () => {
     const router = createInputRouter(BOT);
     router.handle(
       "team",
-      vi.fn(async () => undefined)
+      vi.fn(async () => {})
     );
     const context = answerContext();
     await router.middleware()(context, vi.fn());
