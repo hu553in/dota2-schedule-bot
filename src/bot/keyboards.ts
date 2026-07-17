@@ -1,7 +1,9 @@
 import { InlineKeyboard } from "grammy";
+
 import type { EntityType, MatchDirection } from "../api/pandascore.ts";
 import type { Locale, Translate } from "../localization.ts";
-import { MAX_PAGE, type Page } from "../pagination.ts";
+import { MAX_PAGE } from "../pagination.ts";
+import type { Page } from "../pagination.ts";
 import type { Favorite } from "../storage/favorites-store.ts";
 import { truncateText } from "../text.ts";
 import type { TokenScreenState } from "./messages.ts";

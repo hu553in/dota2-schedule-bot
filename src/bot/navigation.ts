@@ -1,5 +1,7 @@
 import type { Bot } from "grammy";
-import { callbackPageSchema, PAGE_SIZE, type Page } from "../pagination.ts";
+
+import { callbackPageSchema, PAGE_SIZE } from "../pagination.ts";
+import type { Page } from "../pagination.ts";
 import type { Favorite } from "../storage/favorites-store.ts";
 import type { BotContext } from "./context.ts";
 import type { BotDependencies } from "./dependencies.ts";
@@ -14,12 +16,12 @@ import {
   answerCallbackAlert,
   privateCommandOnly,
   replyStorageError,
-  type ScreenMode,
   showHome,
   showScreen,
 } from "./runtime.ts";
+import type { ScreenMode } from "./runtime.ts";
 
-const FAVORITES_PATTERN = /^favorites:(\d+)$/;
+const FAVORITES_PATTERN = /^favorites:(\d+)$/u;
 
 export function registerNavigationHandlers(
   bot: Bot<BotContext>,

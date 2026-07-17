@@ -2,24 +2,27 @@
   "name": "d2-schedule-bot",
   "version": "0.1.0",
   "private": true,
+  "description": "Telegram bot for Dota 2 schedules, live matches, results, tournament seasons, and favorites.",
+  "homepage": "https://t.me/d2_schedule_bot",
+  "license": "MIT",
+  "author": "Ruslan Khasanshin",
+  "repository": "https://github.com/hu553in/dota2-schedule-bot",
   "type": "module",
-  "engines": {
-    "node": ">=22.18.0"
-  },
   "scripts": {
     "build": "wrangler deploy --dry-run",
     "dev": "node scripts/dev.ts",
     "lint": "ultracite check",
     "lint:fix": "ultracite fix",
     "check:types": "wrangler types .wrangler/worker-configuration.d.ts --env-file .dev.vars.example && tsc --pretty -p tsconfig.test.json",
+    "check:workflows": "bunx github-actionlint",
     "check:unused": "knip",
     "check:vulns": "bun audit --prod --audit-level=high",
     "test": "vitest run",
     "test:coverage": "bun run test --coverage",
-    "check": "bun run build && bun check:types && bun lint && bun check:unused && bun check:vulns && bun test:coverage",
-    "check:fix": "bun run build && bun check:types && bun lint:fix && bun check:unused && bun check:vulns && bun test:coverage",
+    "check": "bun lint && bun check:workflows && bun check:types && bun run build && bun check:unused && bun check:vulns && bun test:coverage",
+    "check:fix": "bun lint:fix && bun check",
     "deploy": "node scripts/deploy.ts",
-    "prepare": "if [ \"$LEFTHOOK\" = \"0\" ]; then exit 0; fi; lefthook install || true"
+    "prepare": "if [ -n \"${CI:-}\" ] || [ \"${LEFTHOOK:-}\" = \"0\" ]; then exit 0; fi; lefthook install"
   },
   "dependencies": {
     "@grammyjs/parse-mode": "^2.3.0",
@@ -30,18 +33,20 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.3",
     "@cloudflare/vitest-pool-workers": "^0.18.4",
-    "@commitlint/cli": "^21.2.1",
-    "@commitlint/config-conventional": "^21.2.0",
     "@types/node": "^26.1.1",
     "@vitest/coverage-istanbul": "^4.1.10",
     "knip": "^6.26.0",
     "lefthook": "^2.1.10",
+    "oxfmt": "^0.59.0",
+    "oxlint": "^1.74.0",
     "typescript": "^7.0.2",
     "ultracite": "^7.9.4",
     "vitest": "^4.1.10",
     "wrangler": "^4.110.0"
+  },
+  "engines": {
+    "node": ">=22.18.0"
   },
   "packageManager": "bun@1.3.14"
 }

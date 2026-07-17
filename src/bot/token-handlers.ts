@@ -1,5 +1,6 @@
 import type { Bot } from "grammy";
 import { z } from "zod";
+
 import type { BotContext } from "./context.ts";
 import type { BotDependencies } from "./dependencies.ts";
 import { replyApiError } from "./errors.ts";
@@ -32,7 +33,7 @@ const tokenCandidateSchema = z
   .trim()
   .min(20)
   .max(512)
-  .regex(/^[A-Za-z0-9_-]+$/);
+  .regex(/^[A-Za-z0-9_-]+$/u);
 
 export function registerTokenHandlers(
   bot: Bot<BotContext>,

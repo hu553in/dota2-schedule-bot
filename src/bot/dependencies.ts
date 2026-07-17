@@ -1,4 +1,5 @@
 import type { UserFromGetMe } from "grammy/types";
+
 import type { PandaScoreApi } from "../api/pandascore.ts";
 import type { FavoritesStore } from "../storage/favorites-store.ts";
 import type { PreferencesStore } from "../storage/preferences-store.ts";
@@ -30,5 +31,6 @@ export interface BotDependencies {
   favoritesStore: BotFavoritesStore;
   preferencesStore: BotPreferencesStore;
   telegramFetch?: typeof globalThis.fetch;
+  telegramPremium: boolean;
   tokenStore: BotTokenStore;
 }

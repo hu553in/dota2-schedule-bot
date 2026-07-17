@@ -1,5 +1,7 @@
 import { Bot } from "grammy";
-import { type BotContext, localizationMiddleware } from "./context.ts";
+
+import { localizationMiddleware } from "./context.ts";
+import type { BotContext } from "./context.ts";
 import type { BotDependencies } from "./dependencies.ts";
 import { createInputRouter } from "./input.ts";
 import { registerLanguageHandlers } from "./language-handlers.ts";

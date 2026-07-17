@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import {
   botCommands,
   configureBotCommands,
@@ -9,7 +10,7 @@ describe("Telegram commands", () => {
   it("provides complete English and Russian descriptions", () => {
     const english = botCommands("en");
     const russian = botCommands("ru");
-    expect(english.map(({ command }) => command)).toEqual(
+    expect(english.map(({ command }) => command)).toStrictEqual(
       russian.map(({ command }) => command)
     );
     expect(english).toContainEqual({
@@ -27,11 +28,11 @@ describe("Telegram commands", () => {
           description.length > 0 &&
           description.length <= 256
       )
-    ).toBe(true);
+    ).toBeTruthy();
   });
 
   it("configures default English and Telegram's Russian locale", async () => {
-    const setMyCommands = vi.fn(async () => true as const);
+    const setMyCommands = vi.fn(() => true as const);
     await configureBotCommands({ setMyCommands } as never);
     expect(setMyCommands).toHaveBeenCalledTimes(2);
     expect(setMyCommands).toHaveBeenNthCalledWith(1, botCommands("en"));
@@ -41,8 +42,8 @@ describe("Telegram commands", () => {
   });
 
   it("configures and verifies the production webhook", async () => {
-    const setWebhook = vi.fn(async () => true as const);
-    const getWebhookInfo = vi.fn(async () => ({
+    const setWebhook = vi.fn(() => true as const);
+    const getWebhookInfo = vi.fn(() => ({
       has_custom_certificate: false,
       pending_update_count: 0,
       url: "https://bot.example.workers.dev/",
@@ -63,8 +64,8 @@ describe("Telegram commands", () => {
   });
 
   it("rejects a webhook URL that Telegram did not keep", async () => {
-    const setWebhook = vi.fn(async () => true as const);
-    const getWebhookInfo = vi.fn(async () => ({
+    const setWebhook = vi.fn(() => true as const);
+    const getWebhookInfo = vi.fn(() => ({
       has_custom_certificate: false,
       pending_update_count: 0,
       url: "https://another-worker.example.workers.dev",
@@ -80,8 +81,8 @@ describe("Telegram commands", () => {
   });
 
   it("reports when Telegram has no webhook URL", async () => {
-    const setWebhook = vi.fn(async () => true as const);
-    const getWebhookInfo = vi.fn(async () => ({
+    const setWebhook = vi.fn(() => true as const);
+    const getWebhookInfo = vi.fn(() => ({
       has_custom_certificate: false,
       pending_update_count: 0,
       url: undefined,

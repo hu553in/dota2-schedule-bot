@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { ZodError } from "zod";
+
 import { PandaScoreApi } from "../src/api/pandascore.ts";
 
 const TEAM = { acronym: "TS", id: 7, name: "Team Spirit" };
@@ -41,20 +43,19 @@ function json(data: unknown, init?: ResponseInit): Response {
   return Response.json(data, init);
 }
 
-describe("PandaScoreApi", () => {
+describe(PandaScoreApi, () => {
   it("loads entities by id and keeps the token out of the URL", async () => {
     const { api, requests } = createApi((request) =>
       json(request.url.includes("/teams/") ? TEAM : SERIES)
     );
 
-    await expect(api.getTeam(7, "private-token")).resolves.toEqual(TEAM);
-    await expect(api.getSeries(10_728, "private-token")).resolves.toEqual(
+    await expect(api.getTeam(7, "private-token")).resolves.toStrictEqual(TEAM);
+    await expect(api.getSeries(10_728, "private-token")).resolves.toStrictEqual(
       SERIES
     );
-    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
-      "/teams/7",
-      "/series/10728",
-    ]);
+    expect(
+      requests.map((request) => new URL(request.url).pathname)
+    ).toStrictEqual(["/teams/7", "/series/10728"]);
     expect(requests[0]?.headers.get("authorization")).toBe(
       "Bearer private-token"
     );
@@ -70,7 +71,7 @@ describe("PandaScoreApi", () => {
 
     await expect(
       api.searchTeams("Spirit & Co", 1, 6, "token")
-    ).resolves.toEqual({
+    ).resolves.toStrictEqual({
       data: [TEAM],
       hasNext: false,
       page: 1,
@@ -92,7 +93,7 @@ describe("PandaScoreApi", () => {
 
     await expect(
       api.searchSeries("Esports World Cup 2026", 2, 6, "token")
-    ).resolves.toEqual({
+    ).resolves.toStrictEqual({
       data: [SERIES],
       hasNext: true,
       page: 2,
@@ -105,7 +106,7 @@ describe("PandaScoreApi", () => {
     expect(seriesUrl.searchParams.get("search[slug]")).toBe(
       "esports-world-cup-2026"
     );
-    expect(seriesUrl.searchParams.has("search[name]")).toBe(false);
+    expect(seriesUrl.searchParams.has("search[name]")).toBeFalsy();
     expect(seriesUrl.searchParams.get("sort")).toBe("-begin_at,-id");
     expect(seriesUrl.searchParams.get("page[number]")).toBe("2");
     expect(seriesUrl.searchParams.get("page[size]")).toBe("6");
@@ -113,11 +114,13 @@ describe("PandaScoreApi", () => {
 
   it("does not turn punctuation-only searches into unfiltered API calls", async () => {
     const { api, requests } = createApi(() => json([SERIES]));
-    await expect(api.searchSeries(" — ", 3, 6, "token")).resolves.toEqual({
-      data: [],
-      hasNext: false,
-      page: 3,
-    });
+    await expect(api.searchSeries(" — ", 3, 6, "token")).resolves.toStrictEqual(
+      {
+        data: [],
+        hasNext: false,
+        page: 3,
+      }
+    );
     expect(requests).toHaveLength(0);
   });
 
@@ -142,7 +145,7 @@ describe("PandaScoreApi", () => {
     const upcomingTeam = new URL(requests[0]?.url ?? "");
     expect(upcomingTeam.pathname).toBe("/dota2/matches/upcoming");
     expect(upcomingTeam.searchParams.get("filter[opponent_id]")).toBe("7");
-    expect(upcomingTeam.searchParams.has("filter[status]")).toBe(false);
+    expect(upcomingTeam.searchParams.has("filter[status]")).toBeFalsy();
     expect(upcomingTeam.searchParams.get("sort")).toBe("scheduled_at,id");
     expect(upcomingTeam.searchParams.get("page[number]")).toBe("2");
 
@@ -160,8 +163,8 @@ describe("PandaScoreApi", () => {
 
     const upcomingSeries = new URL(requests[3]?.url ?? "");
     expect(upcomingSeries.pathname).toBe("/series/10728/matches/upcoming");
-    expect(upcomingSeries.searchParams.has("filter[status]")).toBe(false);
-    expect(upcomingSeries.searchParams.has("filter[opponent_id]")).toBe(false);
+    expect(upcomingSeries.searchParams.has("filter[status]")).toBeFalsy();
+    expect(upcomingSeries.searchParams.has("filter[opponent_id]")).toBeFalsy();
 
     const pastSeries = new URL(requests[4]?.url ?? "");
     expect(pastSeries.pathname).toBe("/series/10728/matches/past");
@@ -180,7 +183,7 @@ describe("PandaScoreApi", () => {
     );
     await expect(
       withHeaders.api.getMatches("team", 7, "upcoming", 2, 6, "token")
-    ).resolves.toEqual({
+    ).resolves.toStrictEqual({
       data: [MATCH],
       hasNext: true,
       page: 2,
@@ -191,7 +194,7 @@ describe("PandaScoreApi", () => {
     const withoutHeaders = createApi(() => json([MATCH]));
     await expect(
       withoutHeaders.api.getMatches("team", 7, "upcoming", 4, 1, "token")
-    ).resolves.toEqual({ data: [MATCH], hasNext: true, page: 4 });
+    ).resolves.toStrictEqual({ data: [MATCH], hasNext: true, page: 4 });
   });
 
   it("ignores malformed pagination headers", async () => {
@@ -203,7 +206,7 @@ describe("PandaScoreApi", () => {
 
     await expect(
       api.getMatches("team", 7, "upcoming", 4, 6, "token")
-    ).resolves.toEqual({ data: [MATCH], hasNext: false, page: 4 });
+    ).resolves.toStrictEqual({ data: [MATCH], hasNext: false, page: 4 });
   });
 
   it("filters matches without a single known participant", async () => {
@@ -231,12 +234,12 @@ describe("PandaScoreApi", () => {
 
   it("validates tokens without hiding upstream failures", async () => {
     const valid = createApi(() => json([TEAM]));
-    await expect(valid.api.validateToken("token")).resolves.toBe(true);
+    await expect(valid.api.validateToken("token")).resolves.toBeTruthy();
 
     await Promise.all(
       [401, 403].map(async (status) => {
         const invalid = createApi(() => json({}, { status }));
-        await expect(invalid.api.validateToken("token")).resolves.toBe(false);
+        await expect(invalid.api.validateToken("token")).resolves.toBeFalsy();
       })
     );
 
@@ -248,14 +251,14 @@ describe("PandaScoreApi", () => {
 
   it("rejects invalid PandaScore payloads", async () => {
     const { api } = createApi(() => json({ name: "missing id" }));
-    await expect(api.getTeam(7, "token")).rejects.toThrow();
+    await expect(api.getTeam(7, "token")).rejects.toThrow(ZodError);
 
     const invalidScore = createApi(() =>
       json([{ ...MATCH, results: [{ score: 1.5, team_id: TEAM.id }] }])
     );
     await expect(
       invalidScore.api.getMatches("team", 7, "running", 1, 6, "token")
-    ).rejects.toThrow();
+    ).rejects.toThrow(ZodError);
   });
 
   it("keeps matches when PandaScore adds a new match type", async () => {

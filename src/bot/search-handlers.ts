@@ -1,12 +1,15 @@
 import type { Bot } from "grammy";
+
 import type { EntityType } from "../api/pandascore.ts";
-import { callbackPageSchema, PAGE_SIZE, type Page } from "../pagination.ts";
+import { callbackPageSchema, PAGE_SIZE } from "../pagination.ts";
+import type { Page } from "../pagination.ts";
 import { cleanText } from "../text.ts";
 import type { BotContext } from "./context.ts";
 import type { BotDependencies } from "./dependencies.ts";
 import { replyApiError } from "./errors.ts";
 import type { InputRouter } from "./input.ts";
-import { type SearchResult, searchResultsKeyboard } from "./keyboards.ts";
+import { searchResultsKeyboard } from "./keyboards.ts";
+import type { SearchResult } from "./keyboards.ts";
 import {
   emptySearchMessage,
   searchResultsMessage,
@@ -18,14 +21,14 @@ import {
   acknowledge,
   answerCallbackAlert,
   requireToken,
-  type ScreenMode,
   showScreen,
 } from "./runtime.ts";
+import type { ScreenMode } from "./runtime.ts";
 
 const MIN_SEARCH_LENGTH = 2;
 const MAX_SEARCH_LENGTH = 100;
-const MENU_PATTERN = /^menu:(series|team)$/;
-const SEARCH_PATTERN = /^search:(series|team):(\d+)$/;
+const MENU_PATTERN = /^menu:(series|team)$/u;
+const SEARCH_PATTERN = /^search:(series|team):(\d+)$/u;
 
 function resultPage<T extends { id: number }>(
   page: Page<T>,

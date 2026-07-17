@@ -2,7 +2,7 @@ import type { Locale } from "./localization.ts";
 
 const MIN_UTC_OFFSET_MINUTES = -12 * 60;
 const MAX_UTC_OFFSET_MINUTES = 14 * 60;
-const UTC_OFFSET_PATTERN = /^(?:utc\s*)?([+−-]?)(\d{1,2})(?::?(\d{2}))?$/;
+const UTC_OFFSET_PATTERN = /^(?:utc\s*)?([+−-]?)(\d{1,2})(?::?(\d{2}))?$/u;
 
 export type TimezoneInput =
   | { mode: "automatic" }

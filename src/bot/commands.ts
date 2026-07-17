@@ -1,6 +1,8 @@
 import type { Api } from "grammy";
 import type { BotCommand } from "grammy/types";
-import { getTranslator, type Locale } from "../localization.ts";
+
+import { getTranslator } from "../localization.ts";
+import type { Locale } from "../localization.ts";
 
 export const BOT_COMMANDS = [
   "start",

@@ -1,11 +1,8 @@
 import type { Context, MiddlewareFn } from "grammy";
+
 import { errorMessage } from "../error-message.ts";
-import {
-  getTranslator,
-  type Locale,
-  localeFromLanguageCode,
-  type Translate,
-} from "../localization.ts";
+import { getTranslator, localeFromLanguageCode } from "../localization.ts";
+import type { Locale, Translate } from "../localization.ts";
 import type { UserPreferences } from "../storage/preferences-store.ts";
 import type { BotPreferencesStore } from "./dependencies.ts";
 

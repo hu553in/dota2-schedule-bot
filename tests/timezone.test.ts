@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+
 import { PreferencesStore } from "../src/storage/preferences-store.ts";
 import {
   formatDateAtUtcOffset,
@@ -14,18 +15,21 @@ describe("time zone and user preferences", () => {
   });
 
   it("parses automatic mode and explicit UTC offsets", () => {
-    expect(parseTimezoneInput("авто")).toEqual({ mode: "automatic" });
-    expect(parseTimezoneInput("Telegram")).toEqual({ mode: "automatic" });
-    expect(parseTimezoneInput("+6")).toEqual({ minutes: 360, mode: "offset" });
-    expect(parseTimezoneInput("UTC -3:30")).toEqual({
+    expect(parseTimezoneInput("авто")).toStrictEqual({ mode: "automatic" });
+    expect(parseTimezoneInput("Telegram")).toStrictEqual({ mode: "automatic" });
+    expect(parseTimezoneInput("+6")).toStrictEqual({
+      minutes: 360,
+      mode: "offset",
+    });
+    expect(parseTimezoneInput("UTC -3:30")).toStrictEqual({
       minutes: -210,
       mode: "offset",
     });
-    expect(parseTimezoneInput("UTC −03:30")).toEqual({
+    expect(parseTimezoneInput("UTC −03:30")).toStrictEqual({
       minutes: -210,
       mode: "offset",
     });
-    expect(parseTimezoneInput("530")).toEqual({
+    expect(parseTimezoneInput("530")).toStrictEqual({
       minutes: 330,
       mode: "offset",
     });
@@ -50,38 +54,38 @@ describe("time zone and user preferences", () => {
 
   it("stores both preferences in one row without losing either value", async () => {
     const store = new PreferencesStore(testEnv.DB);
-    expect(await store.get(42)).toEqual({
+    await expect(store.get(42)).resolves.toStrictEqual({
       language: null,
       utcOffsetMinutes: null,
     });
 
     await store.setUtcOffset(42, 360);
-    expect(await store.get(42)).toEqual({
+    await expect(store.get(42)).resolves.toStrictEqual({
       language: null,
       utcOffsetMinutes: 360,
     });
     await store.setLanguage(42, "ru");
-    expect(await store.get("42")).toEqual({
+    await expect(store.get("42")).resolves.toStrictEqual({
       language: "ru",
       utcOffsetMinutes: 360,
     });
 
     await store.setUtcOffset(42, -210);
     await store.setLanguage(42, "en");
-    expect(await store.get(42)).toEqual({
+    await expect(store.get(42)).resolves.toStrictEqual({
       language: "en",
       utcOffsetMinutes: -210,
     });
 
     await store.setUtcOffset(42, null);
-    expect(await store.get(42)).toEqual({
+    await expect(store.get(42)).resolves.toStrictEqual({
       language: "en",
       utcOffsetMinutes: null,
     });
 
     await store.setUtcOffset(43, 60);
     await store.setUtcOffset(43, null);
-    expect(await store.get(43)).toEqual({
+    await expect(store.get(43)).resolves.toStrictEqual({
       language: null,
       utcOffsetMinutes: null,
     });
@@ -105,7 +109,7 @@ describe("time zone and user preferences", () => {
        WHERE name IN ('user_tokens', 'user_favorites', 'user_preferences')
        ORDER BY name`
     ).all<{ name: string; strict: number; wr: number }>();
-    expect(tableOptions.results).toEqual([
+    expect(tableOptions.results).toStrictEqual([
       { name: "user_favorites", strict: 1, wr: 1 },
       { name: "user_preferences", strict: 1, wr: 1 },
       { name: "user_tokens", strict: 1, wr: 1 },
@@ -113,7 +117,7 @@ describe("time zone and user preferences", () => {
     const columns = await testEnv.DB.prepare(
       "PRAGMA table_info(user_preferences)"
     ).all<{ name: string }>();
-    expect(columns.results.map((column) => column.name)).toEqual([
+    expect(columns.results.map((column) => column.name)).toStrictEqual([
       "user_id",
       "language",
       "utc_offset_minutes",
@@ -123,11 +127,11 @@ describe("time zone and user preferences", () => {
       testEnv.DB.prepare(
         "INSERT INTO user_preferences (user_id, language) VALUES ('bad-language', 'de')"
       ).run()
-    ).rejects.toThrow();
+    ).rejects.toThrow(/constraint failed/iu);
     await expect(
       testEnv.DB.prepare(
         "INSERT INTO user_preferences (user_id) VALUES ('empty')"
       ).run()
-    ).rejects.toThrow();
+    ).rejects.toThrow(/constraint failed/iu);
   });
 });

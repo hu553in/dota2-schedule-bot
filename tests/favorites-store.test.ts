@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { FavoritesStore } from "../src/storage/favorites-store.ts";
 import { testEnv } from "./setup.ts";
 
-const REPEATED_WHITESPACE = /\s{2,}/;
+const REPEATED_WHITESPACE = /\s{2,}/u;
 
-describe("FavoritesStore", () => {
+describe(FavoritesStore, () => {
   beforeEach(async () => {
     await testEnv.DB.exec("DELETE FROM user_favorites");
   });
@@ -27,12 +28,12 @@ describe("FavoritesStore", () => {
       )
     ).resolves.toBeUndefined();
     await store.set(42, { id: 7, name: "Team Spirit", type: "team" }, true);
-    expect(await store.has(42, "team", 7)).toBe(true);
-    expect(await store.has(43, "team", 7)).toBe(false);
+    await expect(store.has(42, "team", 7)).resolves.toBeTruthy();
+    await expect(store.has(43, "team", 7)).resolves.toBeFalsy();
 
     await store.set(42, { id: 7, name: "Team Spirit", type: "team" }, false);
-    expect(await store.has(42, "team", 7)).toBe(false);
-    expect(await store.has(42, "series", 10_728)).toBe(true);
+    await expect(store.has(42, "team", 7)).resolves.toBeFalsy();
+    await expect(store.has(42, "series", 10_728)).resolves.toBeTruthy();
   });
 
   it("returns deterministic pages without calling PandaScore", async () => {
@@ -83,7 +84,7 @@ describe("FavoritesStore", () => {
     const columns = await testEnv.DB.prepare(
       "PRAGMA table_info(user_favorites)"
     ).all<{ name: string }>();
-    expect(columns.results.map((column) => column.name)).toEqual([
+    expect(columns.results.map((column) => column.name)).toStrictEqual([
       "user_id",
       "entity_type",
       "entity_id",
@@ -97,13 +98,13 @@ describe("FavoritesStore", () => {
       prepare: vi.fn((sql: string) => ({
         bind: () =>
           sql.includes("COUNT")
-            ? { first: async () => null }
-            : { all: async () => ({ results: [] }) },
+            ? { first: () => null }
+            : { all: () => ({ results: [] }) },
       })),
     } as unknown as D1Database;
     await expect(
       new FavoritesStore(database).list(42, 0, 100)
-    ).resolves.toEqual({
+    ).resolves.toStrictEqual({
       data: [],
       hasNext: false,
       page: 1,

@@ -29,6 +29,7 @@
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
     "useDefineForClassFields": true,
+    "incremental": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,

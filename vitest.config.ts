@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import {
   cloudflareTest,
   readD1Migrations,
@@ -15,6 +16,7 @@ export default defineConfig({
           BOT_TOKEN: "123456789:test_bot_token_12345678901234567890",
           BOT_USERNAME: "d2_schedule_bot",
           PS_MASTER_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+          TELEGRAM_PREMIUM: "false",
           TEST_MIGRATIONS: await readD1Migrations(
             path.join(import.meta.dirname, "migrations")
           ),
@@ -30,7 +32,7 @@ export default defineConfig({
     coverage: {
       include: ["src/**/*.ts"],
       provider: "istanbul",
-      reporter: ["text", "json-summary", "lcov"],
+      reporter: ["text", "json-summary"],
       reportsDirectory: "coverage",
       thresholds: {
         branches: 90,

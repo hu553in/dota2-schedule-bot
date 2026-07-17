@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { type Locale, SUPPORTED_LOCALES } from "../localization.ts";
+
+import { SUPPORTED_LOCALES } from "../localization.ts";
+import type { Locale } from "../localization.ts";
 import { normalizeUtcOffsetMinutes } from "../timezone.ts";
 
 export interface UserPreferences {

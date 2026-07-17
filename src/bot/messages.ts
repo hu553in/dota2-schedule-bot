@@ -1,12 +1,14 @@
 import { FormattedString } from "@grammyjs/parse-mode";
+
 import type { EntityType, MatchDirection } from "../api/pandascore.ts";
 import type { Match, Series, Team } from "../api/schemas.ts";
 import type { Locale, Translate } from "../localization.ts";
 import type { Page } from "../pagination.ts";
 import type { Favorite } from "../storage/favorites-store.ts";
-import { cleanText } from "../text.ts";
+import { cleanText, graphemeBoundaryAtOrBefore } from "../text.ts";
 import { formatDateAtUtcOffset, formatUtcOffset } from "../timezone.ts";
 import { BOT_COMMANDS } from "./commands.ts";
+import { formatStreams } from "./streams.ts";
 
 const TELEGRAM_MESSAGE_LIMIT = 4096;
 const CONTENT_LIMIT = TELEGRAM_MESSAGE_LIMIT - 1;
@@ -14,7 +16,6 @@ const NAME_LIMIT = 80;
 const STAGE_LIMIT = 100;
 const SEARCH_QUERY_PREFIX = "🔎 «";
 const TELEGRAM_URL_BREAK = "\u2060";
-const WWW_PREFIX = /^www\./;
 const SCORE_DIGITS: Record<string, string> = {
   "0": "0️⃣",
   "1": "1️⃣",
@@ -34,17 +35,6 @@ const VISIBLE_STATUS_ICONS = {
   postponed: "⏸",
   unknown: "❔",
 } as const;
-const STREAM_PROVIDER_NAMES: Record<string, string> = {
-  "facebook.com": "Facebook",
-  "kick.com": "Kick",
-  "steam.tv": "Steam",
-  "trovo.live": "Trovo",
-  "twitch.tv": "Twitch",
-  "vk.com": "VK Video",
-  "vkvideo.ru": "VK Video",
-  "youtu.be": "YouTube",
-  "youtube.com": "YouTube",
-};
 const MATCH_FORMAT_PREFIXES = {
   all_games_played: null,
   best_of: "BO",
@@ -77,9 +67,11 @@ export type TokenScreenState =
   | "valid";
 
 function limitMessage(message: FormattedString): FormattedString {
-  return message.text.length <= TELEGRAM_MESSAGE_LIMIT
-    ? message
-    : message.slice(0, CONTENT_LIMIT).plain("…");
+  if (message.text.length <= TELEGRAM_MESSAGE_LIMIT) {
+    return message;
+  }
+  const end = graphemeBoundaryAtOrBefore(message.text, CONTENT_LIMIT);
+  return message.slice(0, end).plain("…");
 }
 
 function pageLabel(t: Translate, page: Page<unknown>): string {
@@ -307,65 +299,13 @@ function matchFormat(t: Translate, match: Match): null | string {
     : t("match.format.gameCount", { count: games });
 }
 
-function streamProvider(url: string): string {
-  const hostname = new URL(url).hostname.toLowerCase().replace(WWW_PREFIX, "");
-  for (const [domain, name] of Object.entries(STREAM_PROVIDER_NAMES)) {
-    if (hostname === domain || hostname.endsWith(`.${domain}`)) {
-      return name;
-    }
-  }
-  return cleanText(hostname, 40);
-}
-
-function streamKind(t: Translate, main: boolean, official: boolean): string {
-  if (main) {
-    return t("match.stream.main");
-  }
-  return t(official ? "match.stream.official" : "match.stream.unofficial");
-}
-
-function formattedStreams(t: Translate, match: Match): FormattedString | null {
-  if (match.status !== "not_started" && match.status !== "running") {
-    return null;
-  }
-  const seen = new Set<string>();
-  const streams = match.streams_list
-    .toSorted(
-      (first, second) =>
-        Number(second.main) - Number(first.main) ||
-        Number(second.official) - Number(first.official)
-    )
-    .filter((stream) => {
-      if (seen.has(stream.raw_url)) {
-        return false;
-      }
-      seen.add(stream.raw_url);
-      return true;
-    });
-  if (streams.length === 0) {
-    return null;
-  }
-  return FormattedString.join(
-    streams.map((stream) => {
-      const language = cleanText(stream.language, 8).toUpperCase();
-      const details = [language, streamKind(t, stream.main, stream.official)]
-        .filter(Boolean)
-        .join(" ");
-      return FormattedString.join([
-        FormattedString.link(streamProvider(stream.raw_url), stream.raw_url),
-        ` (${details})`,
-      ]);
-    }),
-    ", "
-  );
-}
-
 function formatMatch(
   t: Translate,
   locale: Locale,
   match: Match,
   includeSeries: boolean,
-  utcOffsetMinutes: null | number
+  utcOffsetMinutes: null | number,
+  telegramPremium: boolean
 ): FormattedString {
   const firstOpponent = match.opponents[0]?.opponent;
   const secondOpponent = match.opponents[1]?.opponent;
@@ -410,7 +350,7 @@ function formatMatch(
   const stage = preventTelegramAutoLink(
     cleanText(match.tournament?.name ?? "", STAGE_LIMIT)
   );
-  const streams = formattedStreams(t, match);
+  const streams = formatStreams(t, match, telegramPremium);
   return FormattedString.join([
     firstLine,
     "\n",
@@ -432,9 +372,17 @@ export function buildMatchesMessage(
   type: EntityType,
   direction: MatchDirection,
   matches: Page<Match>,
-  utcOffsetMinutes: null | number = null,
-  notice: null | string = null
+  options: {
+    notice?: null | string;
+    telegramPremium?: boolean;
+    utcOffsetMinutes?: null | number;
+  } = {}
 ): FormattedString {
+  const {
+    notice = null,
+    telegramPremium = false,
+    utcOffsetMinutes = null,
+  } = options;
   const directionKey = `match.direction.${direction}`;
   const empty = matches.hasNext
     ? t("match.emptyFiltered")
@@ -442,7 +390,14 @@ export function buildMatchesMessage(
   const content = matches.data.length
     ? FormattedString.join(
         matches.data.map((match) =>
-          formatMatch(t, locale, match, type === "team", utcOffsetMinutes)
+          formatMatch(
+            t,
+            locale,
+            match,
+            type === "team",
+            utcOffsetMinutes,
+            telegramPremium
+          )
         ),
         "\n\n"
       )

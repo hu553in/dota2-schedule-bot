@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { matchSchema } from "../src/api/schemas.ts";
 import {
   backHomeKeyboard,
@@ -34,6 +35,8 @@ import {
   tokenSavedMessage,
   tokenScreenMessage,
 } from "../src/bot/messages.ts";
+import { formatStreams } from "../src/bot/streams.ts";
+import type { StreamProvider } from "../src/bot/streams.ts";
 import { getTranslator } from "../src/localization.ts";
 import { MAX_PAGE } from "../src/pagination.ts";
 
@@ -68,7 +71,7 @@ function keyboardRows(
   keyboard: unknown
 ): { callback_data?: string; style?: string; text: string }[][] {
   return (
-    JSON.parse(JSON.stringify(keyboard)) as {
+    structuredClone(keyboard) as {
       inline_keyboard: {
         callback_data?: string;
         style?: string;
@@ -88,6 +91,22 @@ function callbackData(keyboard: unknown): string[] {
 
 function labels(keyboard: unknown): string[][] {
   return keyboardRows(keyboard).map((row) => row.map((button) => button.text));
+}
+
+function textLinks(message: ReturnType<typeof buildMatchesMessage>) {
+  return message.entities.flatMap((entity) =>
+    entity.type === "text_link"
+      ? [
+          {
+            text: message.text.slice(
+              entity.offset,
+              entity.offset + entity.length
+            ),
+            url: entity.url,
+          },
+        ]
+      : []
+  );
 }
 
 describe("bot messages", () => {
@@ -218,8 +237,10 @@ describe("bot messages", () => {
       "team",
       "upcoming",
       { data: [match("not_started")], hasNext: false, page: 1 },
-      360,
-      "Favorites are temporarily unavailable."
+      {
+        notice: "Favorites are temporarily unavailable.",
+        utcOffsetMinutes: 360,
+      }
     );
     expect(fixedOffset.text).toContain("15:00 · +06:00");
     expect(fixedOffset.text).not.toContain("UTC+06:00");
@@ -262,7 +283,7 @@ describe("bot messages", () => {
     expect(message.text).toContain("Participant TBD");
     expect(message.text).toContain("❔ : ❔");
     expect(message.text).toContain("2026-07-14 10:00 UTC · Custom format");
-    expect(message.text.match(/Time TBD/g)).toHaveLength(2);
+    expect(message.text.match(/Time TBD/gu)).toHaveLength(2);
   });
 
   it.each([
@@ -312,7 +333,7 @@ describe("bot messages", () => {
     expect(message.text).toContain("2026-07-13 13:00 UTC");
     expect(message.text).not.toContain("2026-07-13 15:00 UTC");
     expect(message.text).not.toContain("2026-07-13 16:00 UTC");
-    expect(message.text.match(/Time TBD/g)).toHaveLength(2);
+    expect(message.text.match(/Time TBD/gu)).toHaveLength(2);
   });
 
   it.each([
@@ -352,13 +373,13 @@ describe("bot messages", () => {
   it("links and ranks broadcasts only for upcoming and live matches", () => {
     const streams = [
       {
-        language: "en",
+        language: "en-US",
         main: false,
         official: true,
         raw_url: "https://kick.com/official-en",
       },
       {
-        language: "ru",
+        language: "ru_RU",
         main: false,
         official: false,
         raw_url: "https://kick.com/community-ru",
@@ -383,16 +404,21 @@ describe("bot messages", () => {
       }
     );
     expect(upcoming.text).toContain(
-      "Twitch (RU main), Kick (EN official), Kick (RU unofficial)"
+      "Twitch (🇷🇺 main), Kick (🇺🇸 official), Kick (🇷🇺 unofficial)"
     );
-    expect(
-      upcoming.entities.flatMap((entity) =>
-        entity.type === "text_link" ? [entity.url] : []
-      )
-    ).toEqual([
-      "https://www.twitch.tv/main-ru",
-      "https://kick.com/official-en",
-      "https://kick.com/community-ru",
+    expect(textLinks(upcoming)).toStrictEqual([
+      {
+        text: "Twitch (🇷🇺 main)",
+        url: "https://www.twitch.tv/main-ru",
+      },
+      {
+        text: "Kick (🇺🇸 official)",
+        url: "https://kick.com/official-en",
+      },
+      {
+        text: "Kick (🇷🇺 unofficial)",
+        url: "https://kick.com/community-ru",
+      },
     ]);
 
     const russian = buildMatchesMessage(
@@ -408,7 +434,7 @@ describe("bot messages", () => {
       }
     );
     expect(russian.text).toContain(
-      "Twitch (RU основной), Kick (EN официальный), Kick (RU неофициальный)"
+      "Twitch (🇷🇺 основной), Kick (🇺🇸 официальный), Kick (🇷🇺 неофициальный)"
     );
 
     const past = buildMatchesMessage(en, "en", "Streams", "series", "past", {
@@ -420,6 +446,145 @@ describe("bot messages", () => {
     expect(past.entities).not.toContainEqual(
       expect.objectContaining({ type: "text_link" })
     );
+  });
+
+  it("uses Premium stream icons only with a valid configured ID", () => {
+    const streamMatch = match("running", {
+      streams_list: [
+        {
+          language: "ru",
+          main: true,
+          official: true,
+          raw_url: "https://www.twitch.tv/main-ru",
+        },
+      ],
+    });
+    const provider: StreamProvider = {
+      customEmojiId: "5368324170671202286",
+      customEmojiPlaceholder: "🟣",
+      domains: ["twitch.tv"],
+      name: "Twitch",
+    };
+    const premium = formatStreams(en, streamMatch, true, [provider]);
+
+    expect(premium?.text).toBe("🟣 (🇷🇺 main)");
+    expect(premium?.entities).toStrictEqual([
+      {
+        custom_emoji_id: provider.customEmojiId,
+        length: 2,
+        offset: 0,
+        type: "custom_emoji",
+      },
+      {
+        length: 12,
+        offset: 2,
+        type: "text_link",
+        url: "https://www.twitch.tv/main-ru",
+      },
+    ]);
+
+    const disabled = formatStreams(en, streamMatch, false, [provider]);
+    expect(disabled?.text).toBe("Twitch (🇷🇺 main)");
+    expect(disabled?.entities).toStrictEqual([
+      {
+        length: 18,
+        offset: 0,
+        type: "text_link",
+        url: "https://www.twitch.tv/main-ru",
+      },
+    ]);
+
+    const otherLanguage = formatStreams(
+      en,
+      match("running", {
+        streams_list: [
+          {
+            language: "es",
+            main: true,
+            official: true,
+            raw_url: "https://www.twitch.tv/main-es",
+          },
+        ],
+      }),
+      false,
+      [provider]
+    );
+    expect(otherLanguage?.text).toBe("Twitch (ES main)");
+
+    const invalid = formatStreams(en, streamMatch, true, [
+      { ...provider, customEmojiId: "not-an-id" },
+    ]);
+    expect(invalid?.text).toBe("Twitch (🇷🇺 main)");
+    expect(invalid?.entities).toStrictEqual(disabled?.entities);
+
+    const missing = formatStreams(en, streamMatch, true, [
+      { ...provider, customEmojiId: null },
+    ]);
+    expect(missing?.text).toBe("Twitch (🇷🇺 main)");
+    expect(missing?.entities).toStrictEqual(disabled?.entities);
+
+    const malformedPlaceholder = formatStreams(en, streamMatch, true, [
+      { ...provider, customEmojiPlaceholder: "Twitch" },
+    ]);
+    expect(malformedPlaceholder?.text).toBe("Twitch (🇷🇺 main)");
+    expect(malformedPlaceholder?.entities).toStrictEqual(disabled?.entities);
+
+    const emojiPropertyFalsePositive = formatStreams(en, streamMatch, true, [
+      { ...provider, customEmojiPlaceholder: "1" },
+    ]);
+    expect(emojiPropertyFalsePositive?.text).toBe("Twitch (🇷🇺 main)");
+    expect(emojiPropertyFalsePositive?.entities).toStrictEqual(
+      disabled?.entities
+    );
+  });
+
+  it("configures a unique custom emoji for every bundled stream provider", () => {
+    const providerUrls = [
+      "https://facebook.com/live",
+      "https://kick.com/live",
+      "https://steam.tv/live",
+      "https://trovo.live/live",
+      "https://twitch.tv/live",
+      "https://vkvideo.ru/live",
+      "https://youtube.com/live",
+    ];
+    const configured = formatStreams(
+      en,
+      match("running", {
+        streams_list: providerUrls.map((rawUrl) => ({
+          language: "en",
+          main: false,
+          official: true,
+          raw_url: rawUrl,
+        })),
+      }),
+      true
+    );
+
+    const customEmojiIds = configured?.entities.flatMap((entity) =>
+      entity.type === "custom_emoji" ? [entity.custom_emoji_id] : []
+    );
+    expect(customEmojiIds).toHaveLength(providerUrls.length);
+    expect(new Set(customEmojiIds).size).toBe(providerUrls.length);
+
+    const textOnly = formatStreams(
+      en,
+      match("running", {
+        streams_list: providerUrls.map((rawUrl) => ({
+          language: "en",
+          main: false,
+          official: true,
+          raw_url: rawUrl,
+        })),
+      }),
+      false
+    );
+    expect(textOnly?.text).toBe(
+      "Facebook (🇺🇸 official), Kick (🇺🇸 official), Steam (🇺🇸 official), Trovo (🇺🇸 official), Twitch (🇺🇸 official), VK Video (🇺🇸 official), YouTube (🇺🇸 official)"
+    );
+    expect(
+      textOnly?.entities.every((entity) => entity.type === "text_link")
+    ).toBeTruthy();
   });
 
   it("keeps the best duplicate broadcast and labels unknown providers", () => {
@@ -461,9 +626,9 @@ describe("bot messages", () => {
     );
 
     expect(message.text).toContain(
-      "Twitch (RU main), stream.example.org (official)"
+      "Twitch (🇷🇺 main), stream.example.org (official)"
     );
-    expect(message.text.match(/Twitch/g)).toHaveLength(1);
+    expect(message.text.match(/Twitch/gu)).toHaveLength(1);
   });
 
   it("renders all empty, pagination and reusable search branches", () => {
@@ -548,7 +713,40 @@ describe("bot messages", () => {
       }
     );
     expect(truncated.text.length).toBeLessThanOrEqual(4096);
-    expect(truncated.text.endsWith("…")).toBe(true);
+    expect(truncated.text.endsWith("…")).toBeTruthy();
+
+    const premiumTruncated = buildMatchesMessage(
+      en,
+      "en",
+      "X".repeat(16),
+      "team",
+      "upcoming",
+      {
+        data: [
+          match("not_started", {
+            streams_list: Array.from({ length: 400 }, (_, index) => ({
+              language: "ru",
+              main: true,
+              official: true,
+              raw_url: `https://twitch.tv/live-${index}`,
+            })),
+          }),
+        ],
+        hasNext: false,
+        page: 1,
+      },
+      { telegramPremium: true }
+    );
+    expect(premiumTruncated.text.length).toBeLessThanOrEqual(4096);
+    expect(premiumTruncated.text.endsWith("…")).toBeTruthy();
+    expect(premiumTruncated.text).toBe(premiumTruncated.text.toWellFormed());
+    expect(
+      premiumTruncated.entities.every(
+        (entity) =>
+          entity.offset + entity.length <= premiumTruncated.text.length &&
+          (entity.type !== "custom_emoji" || entity.length === 2)
+      )
+    ).toBeTruthy();
     expect(buildDeploymentPrompt("Kazakh")).toContain(
       "step-by-step instructions in Kazakh"
     );
@@ -612,21 +810,21 @@ describe("bot messages", () => {
 
 describe("bot keyboards", () => {
   it("uses the requested menu hierarchy in both locales", () => {
-    expect(labels(homeKeyboard(ru, true)).slice(0, 3)).toEqual([
+    expect(labels(homeKeyboard(ru, true)).slice(0, 3)).toStrictEqual([
       ["🔎 Найти команду", "🏆 Найти турнир"],
       ["⭐ Избранное"],
       ["⚙️ Настройки", "❓ Помощь"],
     ]);
     expect(callbackData(homeKeyboard(en, false))).toContain("token:add");
     expect(callbackData(homeKeyboard(en, false))).toContain("menu:favorites");
-    expect(labels(settingsKeyboard(ru))).toEqual([
+    expect(labels(settingsKeyboard(ru))).toStrictEqual([
       ["🌐 Язык"],
       ["🕐 Часовой пояс"],
       ["🔐 Токен PandaScore"],
       ["🏠 Главное меню"],
     ]);
     expect(callbackData(settingsKeyboard(en))).not.toContain("menu:favorites");
-    expect(callbackData(helpKeyboard(en))).toEqual([
+    expect(callbackData(helpKeyboard(en))).toStrictEqual([
       "token:guide",
       "menu:main",
     ]);
@@ -663,6 +861,10 @@ describe("bot keyboards", () => {
     expect(keyboardRows(languageKeyboard(ru, "ru"))[0]?.[1]?.style).toBe(
       "primary"
     );
+    expect(labels(languageKeyboard(en, "en"))[0]).toStrictEqual([
+      "🇺🇸 English",
+      "🇷🇺 Русский",
+    ]);
   });
 
   it("shares pagination and navigation across search and favorites", () => {
@@ -677,7 +879,7 @@ describe("bot keyboards", () => {
       "team",
       { hasNext: true, page: 2 }
     );
-    expect(callbackData(search)).toEqual(
+    expect(callbackData(search)).toStrictEqual(
       expect.arrayContaining([
         "matches:team:1:running:1",
         "search:team:1",
@@ -707,7 +909,7 @@ describe("bot keyboards", () => {
       total: 20,
       totalPages: 3,
     });
-    expect(callbackData(favorites)).toEqual(
+    expect(callbackData(favorites)).toStrictEqual(
       expect.arrayContaining([
         "matches:series:10728:running:1",
         "favorites:1",
@@ -717,7 +919,7 @@ describe("bot keyboards", () => {
     );
     expect(callbackData(favorites)).not.toContain("menu:settings");
     expect(keyboardRows(favorites)[0]?.[0]?.style).toBe("primary");
-    expect(labels(favorites)[1]).toEqual(["👥 Team Spirit"]);
+    expect(labels(favorites)[1]).toStrictEqual(["👥 Team Spirit"]);
 
     const lastPage = searchResultsKeyboard(en, [], "series", {
       hasNext: true,
@@ -736,9 +938,12 @@ describe("bot keyboards", () => {
       page: 2,
       type: "team",
     });
-    expect(labels(keyboard)[0]).toEqual(["🔴 Сейчас"]);
-    expect(labels(keyboard)[1]).toEqual(["📅 Ближайшие", "✅ Результаты"]);
-    expect(callbackData(keyboard)).toEqual(
+    expect(labels(keyboard)[0]).toStrictEqual(["🔴 Сейчас"]);
+    expect(labels(keyboard)[1]).toStrictEqual([
+      "📅 Ближайшие",
+      "✅ Результаты",
+    ]);
+    expect(callbackData(keyboard)).toStrictEqual(
       expect.arrayContaining([
         "matches:team:7:upcoming:1",
         "matches:team:7:upcoming:3",
@@ -783,7 +988,7 @@ describe("bot keyboards", () => {
           type: "team",
         })
       ).some((callback) => callback.startsWith("favorite:set:"))
-    ).toBe(false);
+    ).toBeFalsy();
   });
 
   it("keeps dynamic callback data within Telegram's byte limit", () => {

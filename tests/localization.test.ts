@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import english from "../src/locales/en.json" with { type: "json" };
 import russian from "../src/locales/ru.json" with { type: "json" };
 import {
@@ -7,7 +8,7 @@ import {
   SUPPORTED_LOCALES,
 } from "../src/localization.ts";
 
-const PLACEHOLDER_PATTERN = /{{\s*([^},\s]+).*?}}/g;
+const PLACEHOLDER_PATTERN = /\{\{\s*([^},\s]+).*?\}\}/gu;
 
 function flatten(value: unknown, prefix = ""): Map<string, string> {
   const result = new Map<string, string>();
@@ -27,34 +28,34 @@ function flatten(value: unknown, prefix = ""): Map<string, string> {
 function placeholders(value: string): string[] {
   return [...value.matchAll(PLACEHOLDER_PATTERN)]
     .map((match) => match[1] ?? "")
-    .sort((first, second) => first.localeCompare(second));
+    .toSorted((first, second) => first.localeCompare(second));
 }
 
 describe("localization", () => {
   it("keeps complete, non-empty locale catalogs", () => {
     const en = flatten(english);
     const ru = flatten(russian);
-    expect([...en.keys()].sort()).toEqual([...ru.keys()].sort());
-    expect([...en.values()].every((value) => value.trim().length > 0)).toBe(
-      true
-    );
-    expect([...ru.values()].every((value) => value.trim().length > 0)).toBe(
-      true
-    );
+    expect([...en.keys()].toSorted()).toStrictEqual([...ru.keys()].toSorted());
+    expect(
+      [...en.values()].every((value) => value.trim().length > 0)
+    ).toBeTruthy();
+    expect(
+      [...ru.values()].every((value) => value.trim().length > 0)
+    ).toBeTruthy();
     for (const [key, englishText] of en) {
-      expect(placeholders(englishText), key).toEqual(
+      expect(placeholders(englishText), key).toStrictEqual(
         placeholders(ru.get(key) ?? "")
       );
     }
   });
 
   it("uses Russian only for Russian device locales and English otherwise", () => {
-    expect(SUPPORTED_LOCALES).toEqual(["en", "ru"]);
+    expect(SUPPORTED_LOCALES).toStrictEqual(["en", "ru"]);
     expect(localeFromLanguageCode("ru-RU")).toBe("ru");
     expect(localeFromLanguageCode("RU")).toBe("ru");
     expect(localeFromLanguageCode("en-US")).toBe("en");
     expect(localeFromLanguageCode("de")).toBe("en");
-    expect(localeFromLanguageCode(undefined)).toBe("en");
+    expect(localeFromLanguageCode(null)).toBe("en");
   });
 
   it("returns request-scoped translators without changing global language", () => {
