@@ -13,7 +13,7 @@
     "dev": "node scripts/dev.ts",
     "lint": "ultracite check",
     "lint:fix": "ultracite fix",
-    "check:types": "wrangler types .wrangler/worker-configuration.d.ts --env-file .dev.vars.example && tsc --pretty -p tsconfig.test.json",
+    "check:types": "wrangler types --env-file .dev.vars.example && tsc --pretty -p tsconfig.test.json",
     "check:workflows": "bunx github-actionlint",
     "check:unused": "knip",
     "check:vulns": "bun audit --prod --audit-level=high",

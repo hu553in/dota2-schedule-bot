@@ -24,7 +24,7 @@
     "exactOptionalPropertyTypes": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "types": ["node", "./.wrangler/worker-configuration.d.ts"],
+    "types": ["node", "./worker-configuration.d.ts"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
