@@ -190,25 +190,23 @@ function createDependencies({
     ),
     getSeries: vi.fn(() => Promise.resolve(SERIES)),
     getTeam: vi.fn(() => Promise.resolve(TEAM)),
-    searchSeries: vi.fn(
-      (): Promise<Page<typeof SERIES>> =>
-        Promise.resolve({
-          data: [SERIES],
-          hasNext: false,
-          page: 1,
-          total: 1,
-          totalPages: 1,
-        })
+    searchSeries: vi.fn((): Promise<Page<typeof SERIES>> =>
+      Promise.resolve({
+        data: [SERIES],
+        hasNext: false,
+        page: 1,
+        total: 1,
+        totalPages: 1,
+      })
     ),
-    searchTeams: vi.fn(
-      (): Promise<Page<typeof TEAM>> =>
-        Promise.resolve({
-          data: [TEAM],
-          hasNext: false,
-          page: 1,
-          total: 1,
-          totalPages: 1,
-        })
+    searchTeams: vi.fn((): Promise<Page<typeof TEAM>> =>
+      Promise.resolve({
+        data: [TEAM],
+        hasNext: false,
+        page: 1,
+        total: 1,
+        totalPages: 1,
+      })
     ),
     validateToken: vi.fn(() => Promise.resolve(true)),
   } satisfies BotApi;
@@ -220,27 +218,25 @@ function createDependencies({
     set: vi.fn(async () => {}),
   } satisfies BotTokenStore;
   const preferencesStore = {
-    get: vi.fn(
-      (): Promise<UserPreferences> =>
-        Promise.resolve({
-          language: null,
-          utcOffsetMinutes: null,
-        })
+    get: vi.fn((): Promise<UserPreferences> =>
+      Promise.resolve({
+        language: null,
+        utcOffsetMinutes: null,
+      })
     ),
     setLanguage: vi.fn(async () => {}),
     setUtcOffset: vi.fn(async () => {}),
   } satisfies BotPreferencesStore;
   const favoritesStore = {
     has: vi.fn(() => Promise.resolve(false)),
-    list: vi.fn(
-      (): Promise<Page<Favorite>> =>
-        Promise.resolve({
-          data: [],
-          hasNext: false,
-          page: 1,
-          total: 0,
-          totalPages: 1,
-        })
+    list: vi.fn((): Promise<Page<Favorite>> =>
+      Promise.resolve({
+        data: [],
+        hasNext: false,
+        page: 1,
+        total: 0,
+        totalPages: 1,
+      })
     ),
     set: vi.fn(async () => {}),
   } satisfies BotFavoritesStore;
