@@ -223,7 +223,7 @@ Press `Ctrl+C` in the terminal to stop the bot.
 
 Local development uses Telegram long polling, which removes any existing webhook for the same bot.
 After the production bot is deployed, either use a second BotFather bot for local development or run
-`bun run deploy` again when local testing is finished.
+`bun deploy` again when local testing is finished.
 
 ### 5. Create the Cloudflare database
 
@@ -248,7 +248,7 @@ top-level Worker `name` if you want a different name in the Cloudflare dashboard
 Deploy the Worker and connect it to Telegram:
 
 ```bash
-bun run deploy
+bun deploy
 ```
 
 The command uploads the secrets from `.dev.vars`, applies remote D1 migrations, deploys the Worker,
@@ -257,7 +257,7 @@ webhook URL. When it finishes successfully, open the bot in Telegram and send `/
 
 Keep a secure backup of `.dev.vars`. In particular, `PS_MASTER_KEY` must not change after users have
 connected PandaScore tokens: a different key cannot decrypt the existing tokens. Re-running
-`bun run deploy` with the same file is safe.
+`bun deploy` with the same file is safe.
 
 ### 7. Set the BotFather artwork
 
@@ -295,7 +295,7 @@ this repository to your GitHub account and connect that fork through Cloudflare 
    **D1** -> **Edit** for the target account.
 3. Set the production branch to `main`.
 4. Set the build command to `bun check`.
-5. Set the deploy command to `bun run deploy`.
+5. Set the deploy command to `bun deploy`.
 6. Disable non-production branch builds unless you need preview deployments.
 7. Add `BOT_TOKEN` and `WEBHOOK_SECRET` as build secrets. Use the same values as in `.dev.vars`.
 8. Add `NODE_VERSION` and `BUN_VERSION` as build variables, using the minimum Node.js version and
@@ -327,10 +327,10 @@ Runtime configuration is validated in `src/config.ts`.
 | `TELEGRAM_PREMIUM` | `wrangler.jsonc` variable | No       | Whether the bot owner has Premium; defaults to `false`  |
 | `DB`               | D1 binding                | Yes      | D1 database for tokens, favorites, and preferences      |
 
-`bun dev` and `bun run deploy` synchronize `BOT_NAME` and `BOT_USERNAME` with the BotFather bot.
+`bun dev` and `bun deploy` synchronize `BOT_NAME` and `BOT_USERNAME` with the BotFather bot.
 `WEBHOOK_SECRET` must have the same value in the deployed Worker and in the environment that runs
-`bun run deploy`. `TELEGRAM_PREMIUM` accepts only `"true"` or `"false"`; valid provider IDs are
-still required before the enabled mode can render custom emoji.
+`bun deploy`. `TELEGRAM_PREMIUM` accepts only `"true"` or `"false"`; valid provider IDs are still
+required before the enabled mode can render custom emoji.
 
 ## Data and security
 
