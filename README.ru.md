@@ -161,8 +161,8 @@ Telegram-ботов или работы с Cloudflare не нужен. Выпо�
 Понадобятся:
 
 - [Git](https://git-scm.com/downloads)
-- [Node.js](https://nodejs.org/en/download) 22.18 или новее
-- [Bun](https://bun.sh/docs/installation) 1.3.14
+- [Node.js](https://nodejs.org/en/download)
+- [Bun](https://bun.sh/docs/installation)
 - Бесплатный [аккаунт Cloudflare](https://dash.cloudflare.com/sign-up)
 - Аккаунт Telegram
 
@@ -303,7 +303,8 @@ Workers Builds:
 5. Укажи `bun run deploy` как команду развёртывания.
 6. Отключи сборки непродакшен-веток, если preview-развёртывания не нужны.
 7. Добавь `BOT_TOKEN` и `WEBHOOK_SECRET` как секреты сборки со значениями из `.dev.vars`.
-8. Добавь `NODE_VERSION=22.18.0` и `BUN_VERSION=1.3.14` как переменные сборки.
+8. Добавь `NODE_VERSION` и `BUN_VERSION` как переменные сборки, используя минимальную версию Node.js
+   и версию Bun из `package.json`.
 
 Первое ручное развёртывание уже создаёт секреты среды выполнения Worker. Не удаляй `BOT_TOKEN`,
 `PS_MASTER_KEY` и `WEBHOOK_SECRET` из раздела **Variables and Secrets**. Секреты сборки существуют

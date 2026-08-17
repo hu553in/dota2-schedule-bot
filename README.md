@@ -158,8 +158,8 @@ terminal.
 You need:
 
 - [Git](https://git-scm.com/downloads)
-- [Node.js](https://nodejs.org/en/download) 22.18 or newer
-- [Bun](https://bun.sh/docs/installation) 1.3.14
+- [Node.js](https://nodejs.org/en/download)
+- [Bun](https://bun.sh/docs/installation)
 - A free [Cloudflare account](https://dash.cloudflare.com/sign-up)
 - A Telegram account
 
@@ -298,7 +298,8 @@ this repository to your GitHub account and connect that fork through Cloudflare 
 5. Set the deploy command to `bun run deploy`.
 6. Disable non-production branch builds unless you need preview deployments.
 7. Add `BOT_TOKEN` and `WEBHOOK_SECRET` as build secrets. Use the same values as in `.dev.vars`.
-8. Add `NODE_VERSION=22.18.0` and `BUN_VERSION=1.3.14` as build variables.
+8. Add `NODE_VERSION` and `BUN_VERSION` as build variables, using the minimum Node.js version and
+   the Bun version declared in `package.json`.
 
 The initial manual deployment already creates the Worker's runtime secrets. Do not delete
 `BOT_TOKEN`, `PS_MASTER_KEY`, or `WEBHOOK_SECRET` from **Variables and Secrets**. Build secrets are

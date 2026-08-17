@@ -1,4 +1,4 @@
 {
   "$schema": "./node_modules/knip/schema.json",
-  "ignoreDependencies": ["@commitlint/cli", "cloudflare"]
+  "ignoreDependencies": ["@commitlint/cli", "cloudflare", "renovate"]
 }
