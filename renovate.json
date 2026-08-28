@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>hu553in/common-things//presets/renovate/bun"]
+  "extends": ["github>hu553in/common-things//presets/renovate/bun"],
+  "packageRules": [
+    {
+      "description": "Keep Node typings on the declared runtime major",
+      "matchManagers": ["bun"],
+      "matchPackageNames": ["@types/node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
 }

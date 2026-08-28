@@ -233,13 +233,13 @@ bun dev
 Авторизуй Wrangler в своём аккаунте Cloudflare:
 
 ```bash
-bunx wrangler login
+bun wrangler login
 ```
 
 Создай продакшен-базу D1:
 
 ```bash
-bunx wrangler d1 create d2-schedule-bot
+bun wrangler d1 create d2-schedule-bot
 ```
 
 Wrangler выведет UUID `database_id`. Открой `wrangler.jsonc` и замени существующее значение

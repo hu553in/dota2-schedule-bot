@@ -230,13 +230,13 @@ After the production bot is deployed, either use a second BotFather bot for loca
 Authorize Wrangler in your Cloudflare account:
 
 ```bash
-bunx wrangler login
+bun wrangler login
 ```
 
 Create the production D1 database:
 
 ```bash
-bunx wrangler d1 create d2-schedule-bot
+bun wrangler d1 create d2-schedule-bot
 ```
 
 Wrangler prints a `database_id` UUID. Open `wrangler.jsonc` and replace the existing `database_id`
