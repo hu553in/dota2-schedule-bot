@@ -4,8 +4,7 @@
     "types": [
       "node",
       "./worker-configuration.d.ts",
-      "@cloudflare/vitest-pool-workers/types",
-      "vitest/globals"
+      "@cloudflare/vitest-pool-workers/types"
     ]
   }
 }
