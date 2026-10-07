@@ -16,3 +16,5 @@ jobs:
     permissions:
       contents: read
     uses: hu553in/common-things/.github/workflows/check-bun.yml@main
+    with:
+      node: true

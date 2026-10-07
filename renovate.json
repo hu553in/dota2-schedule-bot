@@ -3,5 +3,13 @@
   "extends": [
     "github>hu553in/common-things//presets/renovate/bun",
     "helpers:disableTypesNodeMajor"
+  ],
+  "packageRules": [
+    {
+      "description": "Keep Vitest compatible with the Cloudflare Workers pool",
+      "matchManagers": ["bun"],
+      "matchPackageNames": ["vitest", "@vitest/coverage-istanbul"],
+      "allowedVersions": "<5"
+    }
   ]
 }
