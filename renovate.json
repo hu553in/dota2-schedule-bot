@@ -8,7 +8,7 @@
     {
       "description": "Keep Vitest compatible with the Cloudflare Workers pool",
       "matchManagers": ["bun"],
-      "matchPackageNames": ["vitest", "@vitest/coverage-istanbul"],
+      "matchPackageNames": ["@vitest/coverage-istanbul", "vitest"],
       "allowedVersions": "<5"
     }
   ]

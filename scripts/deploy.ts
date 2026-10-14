@@ -51,7 +51,7 @@ function environmentVariables(): DeploymentVariables {
 
 function runWrangler(
   arguments_: string[],
-  environment: NodeJS.ProcessEnv = {}
+  environment: Partial<NodeJS.ProcessEnv> = {}
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn("wrangler", arguments_, {
