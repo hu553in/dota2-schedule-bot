@@ -38,7 +38,7 @@ function setEnvValue(source: string, key: string, value: string): string {
   const line = `${key}=${value}`;
   const pattern = new RegExp(`^${key}=.*$`, "gmu");
   if (pattern.test(source)) {
-    return source.replace(pattern, line);
+    return source.replaceAll(pattern, line);
   }
   const separator = source.length === 0 || source.endsWith("\n") ? "" : "\n";
   return `${source}${separator}${line}\n`;
