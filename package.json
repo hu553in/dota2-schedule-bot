@@ -40,7 +40,7 @@
     "@vitest/coverage-istanbul": "^4.1.11",
     "knip": "^6.40.0",
     "lefthook": "^2.1.17",
-    "oxfmt": "^0.74.0",
+    "oxfmt": "^0.75.0",
     "oxlint": "^1.87.0",
     "typescript": "^7.0.2",
     "ultracite": "^8.0.0",
