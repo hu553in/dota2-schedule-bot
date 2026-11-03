@@ -24,7 +24,11 @@
     "exactOptionalPropertyTypes": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "types": ["node", "./worker-configuration.d.ts"],
+    "types": [
+      "node",
+      "./worker-configuration.d.ts",
+      "@cloudflare/vitest-pool-workers/types"
+    ],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",

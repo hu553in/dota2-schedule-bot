@@ -274,8 +274,8 @@ the bot and open **Edit Bot**:
 
 The public [`Dota 2 Stream Providers`](https://t.me/addemoji/Dota2StreamProviders) pack and its IDs
 are already configured. If the account that owns the bot has Telegram Premium, set
-`TELEGRAM_PREMIUM` to `"true"` in `wrangler.jsonc`, run `bun check` and deploy. Users do not need
-Premium. Otherwise, keep the default `"false"` and the bot will use complete text links. The
+`TELEGRAM_PREMIUM` to `"true"` in `wrangler.jsonc`, run `bun check:all` and deploy. Users do not
+need Premium. Otherwise, keep the default `"false"` and the bot will use complete text links. The
 ordinary emoji assigned while creating the pack exist only as Telegram's mandatory custom-emoji
 placeholders. Telegram may display a placeholder in system notifications or forwarded messages where
 the custom emoji cannot be rendered; the bot never uses it as a standalone provider label.
@@ -294,7 +294,7 @@ this repository to your GitHub account and connect that fork through Cloudflare 
 2. Under **API token**, select or create a token that can deploy Workers and has **Account** ->
    **D1** -> **Edit** for the target account.
 3. Set the production branch to `main`.
-4. Set the build command to `bun check`.
+4. Set the build command to `bun check:all`.
 5. Set the deploy command to `bun deploy`.
 6. Disable non-production branch builds unless you need preview deployments.
 7. Add `BOT_TOKEN` and `WEBHOOK_SECRET` as build secrets. Use the same values as in `.dev.vars`.
@@ -372,7 +372,7 @@ Cloudflare account and use a private D1 database. The complete source is availab
 Run the complete local gate:
 
 ```bash
-bun check      # Full local gate
+bun check:all  # Full local gate
 bun check:fix  # Full local gate with automatic fixes
 ```
 

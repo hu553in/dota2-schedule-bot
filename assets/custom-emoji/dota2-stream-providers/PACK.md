@@ -47,4 +47,4 @@ magick identify -format '%f %wx%h\n' upload/*.webp
 Telegram accepts static custom emoji as PNG or WEBP at exactly 100x100 pixels. Create an independent
 pack through [@Stickers](https://t.me/Stickers), assign the ordinary emoji from the table, publish
 it, then replace the corresponding `customEmojiId` values in `src/bot/streams.ts` and run
-`bun check`.
+`bun check:all`.
