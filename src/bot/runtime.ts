@@ -104,17 +104,14 @@ export async function editKeyboard(
   }
 }
 
-export function acknowledge(context: BotContext): Promise<void> {
-  return context
-    .answerCallbackQuery()
-    .then(() => {
-      /* empty */
-    })
-    .catch((error) => {
-      console.error("Callback acknowledgement failed", {
-        message: errorMessage(error),
-      });
+export async function acknowledge(context: BotContext): Promise<void> {
+  try {
+    await context.answerCallbackQuery();
+  } catch (error) {
+    console.error("Callback acknowledgement failed", {
+      message: errorMessage(error),
     });
+  }
 }
 
 export async function answerCallbackAlert(
