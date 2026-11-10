@@ -30,7 +30,7 @@
     "@grammyjs/parse-mode": "^2.3.0",
     "@grammyjs/stateless-question": "^4.0.0",
     "grammy": "^1.46.0",
-    "i18next": "^26.4.2",
+    "i18next": "^27.0.0",
     "ky": "^2.1.0",
     "zod": "^4.6.5"
   },
