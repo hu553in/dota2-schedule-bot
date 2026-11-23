@@ -29,12 +29,11 @@ export type {
 } from "./dependencies.ts";
 
 export function createBot(dependencies: BotDependencies): Bot<BotContext> {
-  const { botInfo, botToken, preferencesStore, telegramFetch } = dependencies;
+  const { botInfo, botToken, preferencesStore } = dependencies;
   const bot = new Bot<BotContext>(botToken, {
     botInfo,
     client: {
       timeoutSeconds: TELEGRAM_TIMEOUT_SECONDS,
-      ...(telegramFetch ? { fetch: telegramFetch } : {}),
     },
   });
   bot.api.config.use((previous, method, payload, signal) => {

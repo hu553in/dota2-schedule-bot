@@ -27,7 +27,7 @@
     "types": [
       "node",
       "./worker-configuration.d.ts",
-      "@cloudflare/vitest-pool-workers/types"
+      "@cloudflare/vitest-plugin/types"
     ],
     "module": "ESNext",
     "moduleDetection": "force",

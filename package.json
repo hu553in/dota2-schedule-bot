@@ -14,14 +14,13 @@
     "lint": "ultracite check",
     "lint:fix": "ultracite fix",
     "check:hooks": "lefthook validate",
-    "check:workflows": "bunx github-actionlint",
-    "check:renovate": "bunx --package renovate renovate-config-validator --strict --no-global renovate.json",
+    "check:workflows": "bunx --minimum-release-age 259200 github-actionlint",
     "check:types": "wrangler types --env-file .dev.vars.example && bun check",
     "check:unused": "knip",
     "check:vulns": "bun audit --prod --audit-level=high",
     "test": "vitest run",
     "test:coverage": "bun run test --coverage",
-    "check:all": "bun lint && bun check:hooks && bun check:workflows && bun check:renovate && bun check:types && bun run build && bun check:unused && bun check:vulns && bun test:coverage",
+    "check:all": "bun lint && bun check:hooks && bun check:workflows && bun check:types && bun run build && bun check:unused && bun check:vulns && bun test:coverage",
     "check:fix": "bun lint:fix && bun check:all",
     "deploy": "node scripts/deploy.ts",
     "prepare": "if [ -n \"${CI:-}\" ] || [ \"${LEFTHOOK:-}\" = \"0\" ]; then exit 0; fi; lefthook install"
@@ -30,22 +29,22 @@
     "@grammyjs/parse-mode": "^2.3.0",
     "@grammyjs/stateless-question": "^4.0.0",
     "grammy": "^1.46.0",
-    "i18next": "^27.0.0",
-    "ky": "^2.1.0",
-    "zod": "^4.6.5"
+    "i18next": "^27.2.2",
+    "ky": "^2.2.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.23.0",
+    "@cloudflare/vitest-plugin": "^1.8.5",
     "@types/node": "^22.20.5",
-    "@vitest/coverage-istanbul": "^4.1.11",
-    "knip": "^6.44.1",
-    "lefthook": "^2.1.17",
+    "@vitest/coverage-istanbul": "^5.1.1",
+    "knip": "^6.47.0",
+    "lefthook": "^2.2.2",
     "oxfmt": "^0.79.0",
-    "oxlint": "^1.87.0",
+    "oxlint": "^1.94.0",
     "typescript": "^7.0.2",
-    "ultracite": "^8.0.0",
-    "vitest": "^4.1.11",
-    "wrangler": "^4.148.0"
+    "ultracite": "^8.3.1",
+    "vitest": "^5.1.1",
+    "wrangler": "^4.165.0"
   },
   "engines": {
     "node": ">=22.18.0"

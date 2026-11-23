@@ -1,9 +1,6 @@
 import path from "node:path";
 
-import {
-  cloudflareTest,
-  readD1Migrations,
-} from "@cloudflare/vitest-pool-workers";
+import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -23,6 +20,8 @@ export default defineConfig({
           WEBHOOK_SECRET: "test_webhook_secret_1234567890_ab",
         },
         compatibilityDate: "2026-07-13",
+        // Vitest 5 imports node:inspector in the test worker.
+        compatibilityFlags: ["enable_nodejs_inspector_module"],
         d1Databases: ["DB"],
       },
     })),

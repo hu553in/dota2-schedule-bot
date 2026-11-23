@@ -30,7 +30,6 @@ export interface BotDependencies {
   botToken: string;
   favoritesStore: BotFavoritesStore;
   preferencesStore: BotPreferencesStore;
-  telegramFetch?: typeof globalThis.fetch;
   telegramPremium: boolean;
   tokenStore: BotTokenStore;
 }

@@ -62,10 +62,9 @@ function assertReplaceableSecret(
 }
 
 async function loadDevSecrets(): Promise<DevSecrets> {
-  const fileExists = await access(DEV_VARS_PATH).then(
-    () => true,
-    () => false
-  );
+  const fileExists = await access(DEV_VARS_PATH)
+    .then(() => true)
+    .catch(() => false);
   let source = fileExists ? await readFile(DEV_VARS_PATH, "utf-8") : "";
   let values: DevVars;
   try {

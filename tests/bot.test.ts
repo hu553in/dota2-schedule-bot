@@ -1,5 +1,5 @@
 import type { Update, UserFromGetMe } from "grammy/types";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { EntityType, MatchDirection } from "../src/api/pandascore.ts";
 import type { Match } from "../src/api/schemas.ts";
@@ -241,13 +241,13 @@ function createDependencies({
     set: vi.fn(async () => {}),
   } satisfies BotFavoritesStore;
   const telegram = new TelegramFake();
+  vi.stubGlobal("fetch", telegram.fetch);
   const bot = createBot({
     api,
     botInfo: BOT_INFO,
     botToken: "123456789:test_bot_token_12345678901234567890",
     favoritesStore,
     preferencesStore,
-    telegramFetch: telegram.fetch,
     telegramPremium,
     tokenStore,
   });
@@ -268,6 +268,10 @@ function encoded(value: unknown): string {
 describe(createBot, () => {
   beforeEach(() => {
     updateId = 0;
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("shows token-aware onboarding and a recovery path for corrupt storage", async () => {

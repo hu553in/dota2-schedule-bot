@@ -1,4 +1,4 @@
-import type { D1Migration } from "@cloudflare/vitest-pool-workers";
+import type { D1Migration } from "@cloudflare/vitest-plugin";
 import { applyD1Migrations } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 
