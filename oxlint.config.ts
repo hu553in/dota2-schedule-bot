@@ -27,6 +27,5 @@ export default defineConfig({
     "prefer-named-capture-group": "off",
     "promise/avoid-new": "off",
     "promise/prefer-await-to-callbacks": "off",
-    "promise/prefer-await-to-then": "off",
   },
 });

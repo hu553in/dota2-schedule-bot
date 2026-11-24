@@ -196,7 +196,9 @@ bun --version
 git clone https://github.com/hu553in/dota2-schedule-bot.git
 cd dota2-schedule-bot
 bun ci
-cp .dev.vars.example .dev.vars
+if [ ! -e .dev.vars ] && [ ! -L .dev.vars ]; then
+  (umask 077 && cp .dev.vars.example .dev.vars)
+fi
 ```
 
 Открой `.dev.vars` в любом текстовом редакторе и замени только значение `BOT_TOKEN` на токен от
@@ -303,17 +305,16 @@ Workers Builds:
 5. Укажи `bun deploy` как команду развёртывания.
 6. Отключи сборки непродакшен-веток, если preview-развёртывания не нужны.
 7. Добавь `BOT_TOKEN` и `WEBHOOK_SECRET` как секреты сборки со значениями из `.dev.vars`.
-8. Добавь `NODE_VERSION` и `BUN_VERSION` как переменные сборки, используя минимальную версию Node.js
-   и версию Bun из `package.json`.
 
 Первое ручное развёртывание уже создаёт секреты среды выполнения Worker. Не удаляй `BOT_TOKEN`,
-`PS_MASTER_KEY` и `WEBHOOK_SECRET` из раздела **Variables and Secrets**. Секреты сборки существуют
-отдельно и доступны только во время выполнения команды развёртывания в Cloudflare.
+`PS_MASTER_KEY` и `WEBHOOK_SECRET` из раздела **Variables and Secrets**. Workers Builds использует
+свои секреты сборки.
 
 Справочные материалы по конфигурации Cloudflare:
 
 - [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/)
 - [Конфигурация сборки](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)
+- [Образ сборки и версии инструментов](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/)
 - [Разрешения API-токенов](https://developers.cloudflare.com/fundamentals/api/reference/permissions/)
 - [Секреты Worker](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [Миграции D1](https://developers.cloudflare.com/d1/reference/migrations/)
@@ -379,15 +380,16 @@ D1 содержит три прикладные таблицы:
 Запусти полную локальную проверку:
 
 ```bash
-bun check:all  # Полная локальная проверка
-bun check:fix  # Полная локальная проверка с автоисправлениями
+bun check:all
 ```
+
+Запусти `bun check:fix`, чтобы применить автоисправления перед полной проверкой.
 
 Отдельные команды:
 
 ```bash
-bun lint           # Запустить проверку Ultracite
-bun lint:fix       # Применить исправления Ultracite
+bun lint           # Проверить форматирование Bun и правила Oxlint
+bun lint:fix       # Применить автоисправления Oxlint и форматирование Bun
 bun check:types    # Сгенерировать типы Worker и запустить TypeScript
 bun run build      # Проверить сборку без развёртывания
 bun check:unused   # Запустить Knip
@@ -419,7 +421,7 @@ wrangler.jsonc        Конфигурация Cloudflare Worker, D1, перем
 - PandaScore REST API
 - i18next, ky, Zod
 - Vitest с пулом Cloudflare Workers
-- Ultracite, Knip, Lefthook, commitlint
+- Bun fmt, Oxlint с правилами Ultracite, Knip, Lefthook, commitlint
 
 ## Лицензия
 

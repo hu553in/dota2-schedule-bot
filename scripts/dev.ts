@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { access, chmod, readFile, writeFile } from "node:fs/promises";
-import { parseEnv } from "node:util";
+import { isDeepStrictEqual, parseEnv } from "node:util";
 
 import { Api, Bot } from "grammy";
 import { unstable_startWorker } from "wrangler";
@@ -36,9 +36,18 @@ interface DevVars {
 
 function setEnvValue(source: string, key: string, value: string): string {
   const line = `${key}=${value}`;
-  const pattern = new RegExp(`^${key}=.*$`, "gmu");
-  if (pattern.test(source)) {
-    return source.replaceAll(pattern, line);
+  const expected = { ...parseEnv(source), [key]: value };
+  const pattern = new RegExp(
+    `^[\\t ]*(?:export[\\t ]+)?${key}[\\t ]*=.*$`,
+    "gmu"
+  );
+  for (const match of source.matchAll(pattern)) {
+    const start = match.index;
+    const end = start + match[0].length;
+    const updated = `${source.slice(0, start)}${line}${source.slice(end)}`;
+    if (isDeepStrictEqual({ ...parseEnv(updated) }, expected)) {
+      return updated;
+    }
   }
   const separator = source.length === 0 || source.endsWith("\n") ? "" : "\n";
   return `${source}${separator}${line}\n`;
@@ -107,7 +116,10 @@ async function loadDevSecrets(): Promise<DevSecrets> {
     updatedFile = true;
   }
   if (updatedFile || !fileExists) {
-    await writeFile(DEV_VARS_PATH, source, { mode: 0o600 });
+    await writeFile(DEV_VARS_PATH, source, {
+      flag: fileExists ? "w" : "wx",
+      mode: 0o600,
+    });
     values = parseDevVars(source);
     console.log(`Local configuration is ready in ${DEV_VARS_PATH}.`);
   }

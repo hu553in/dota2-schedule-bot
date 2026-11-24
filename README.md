@@ -193,7 +193,9 @@ create a private local configuration:
 git clone https://github.com/hu553in/dota2-schedule-bot.git
 cd dota2-schedule-bot
 bun ci
-cp .dev.vars.example .dev.vars
+if [ ! -e .dev.vars ] && [ ! -L .dev.vars ]; then
+  (umask 077 && cp .dev.vars.example .dev.vars)
+fi
 ```
 
 Open `.dev.vars` in any text editor and replace only the `BOT_TOKEN` value with the token from
@@ -298,17 +300,16 @@ this repository to your GitHub account and connect that fork through Cloudflare 
 5. Set the deploy command to `bun deploy`.
 6. Disable non-production branch builds unless you need preview deployments.
 7. Add `BOT_TOKEN` and `WEBHOOK_SECRET` as build secrets. Use the same values as in `.dev.vars`.
-8. Add `NODE_VERSION` and `BUN_VERSION` as build variables, using the minimum Node.js version and
-   the Bun version declared in `package.json`.
 
 The initial manual deployment already creates the Worker's runtime secrets. Do not delete
-`BOT_TOKEN`, `PS_MASTER_KEY`, or `WEBHOOK_SECRET` from **Variables and Secrets**. Build secrets are
-separate and are available only while Cloudflare runs the deployment command.
+`BOT_TOKEN`, `PS_MASTER_KEY`, or `WEBHOOK_SECRET` from **Variables and Secrets**. Workers Builds
+uses its own build secrets.
 
 Cloudflare configuration references:
 
 - [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/)
 - [Build configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)
+- [Build image and runtime versions](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/)
 - [API token permissions](https://developers.cloudflare.com/fundamentals/api/reference/permissions/)
 - [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/)
@@ -372,15 +373,16 @@ Cloudflare account and use a private D1 database. The complete source is availab
 Run the complete local gate:
 
 ```bash
-bun check:all  # Full local gate
-bun check:fix  # Full local gate with automatic fixes
+bun check:all
 ```
+
+Use `bun check:fix` to apply supported fixes before the full check.
 
 Focused commands:
 
 ```bash
-bun lint           # Ultracite check
-bun lint:fix       # Ultracite fixes
+bun lint           # Bun formatting and Oxlint
+bun lint:fix       # Oxlint fixes and Bun formatting
 bun check:types    # Generate Worker types and run TypeScript
 bun run build      # Run a dry deployment build
 bun check:unused   # Knip
@@ -412,7 +414,7 @@ wrangler.jsonc        Cloudflare Worker, D1, variables, and observability config
 - PandaScore REST API
 - i18next, ky, Zod
 - Vitest with the Cloudflare Workers pool
-- Ultracite, Knip, Lefthook, commitlint
+- Bun fmt, Oxlint with Ultracite rules, Knip, Lefthook, commitlint
 
 ## License
 
